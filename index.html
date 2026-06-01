@@ -1064,7 +1064,7 @@ async function loadPage(page) {
 
 // ── CFO ──
 async function loadCFO() {
-  const [s, txns] = await Promise.all([api('/summary'), api('/transactions?limit=5')]);
+  const [s] = await Promise.all([api('/summary')]);
   if(!s) return;
   const now = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
   document.getElementById('cfo-sub').textContent = `Last updated: ${now} · All systems live`;
@@ -1084,14 +1084,49 @@ async function loadCFO() {
     <div class="kpi-card" style="--accent-color:var(--accent)"><div class="kpi-label">Savings Rate</div><div class="kpi-value">${s.savings_rate}%</div><div class="kpi-badge up">▲ Target: 45%</div></div>
     <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Total Debt</div><div class="kpi-value">${fmtL(s.total_debt)}</div><div class="kpi-badge neutral">Liabilities ${fmtL(s.total_liabilities)}</div></div>
     <div class="kpi-card" style="--accent-color:var(--cyan)"><div class="kpi-label">Investments</div><div class="kpi-value">${fmtL(s.total_investments)}</div><div class="kpi-badge up">▲ Growing</div></div>`;
-  if(txns?.transactions) {
-    document.getElementById('cfo-txns').innerHTML = txns.transactions.map(t=>`
-      <div class="txn-item">
-        <div class="txn-icon">${t.icon}</div>
-        <div><div class="txn-name">${t.description}</div><div class="txn-cat">${t.category} · ${t.date}</div></div>
-        <div class="txn-amount ${t.amount>0?'amt-green':'amt-red'}">${t.amount>0?'+':''}${fmt(t.amount)}</div>
-      </div>`).join('');
+  
+  // Show Gmail emails if synced, otherwise show transactions
+  let items = [];
+  if (s.gmail_synced) {
+    const emails = await api('/emails');
+    items = (emails || []).slice(0, 5).map(e => ({
+      icon: e.icon || '📧',
+      name: e.subject,
+      category: e.category,
+      date: e.email_date,
+      sender: e.sender,
+      priority: e.priority,
+      isEmail: true
+    }));
+  } else {
+    const txns = await api('/transactions?limit=5');
+    items = (txns?.transactions || []).map(t => ({
+      icon: t.icon,
+      name: t.description,
+      category: t.category,
+      date: t.date,
+      amount: t.amount,
+      isEmail: false
+    }));
   }
+  
+  document.getElementById('cfo-txns').innerHTML = items.map(t => {
+    if (t.isEmail) {
+      return `
+        <div class="txn-item">
+          <div class="txn-icon">${t.icon}</div>
+          <div><div class="txn-name">${t.name}</div><div class="txn-cat">${t.sender} · ${t.date}</div></div>
+          <span class="pill ${t.priority === 'urgent' ? 'pill-red' : t.priority === 'review' ? 'pill-yellow' : 'pill-blue'}" style="white-space:nowrap">${t.priority}</span>
+        </div>`;
+    } else {
+      return `
+        <div class="txn-item">
+          <div class="txn-icon">${t.icon}</div>
+          <div><div class="txn-name">${t.name}</div><div class="txn-cat">${t.category} · ${t.date}</div></div>
+          <div class="txn-amount ${t.amount > 0 ? 'amt-green' : 'amt-red'}">${t.amount > 0 ? '+' : ''}${fmt(t.amount)}</div>
+        </div>`;
+    }
+  }).join('');
   // AI insights (rule-based from data)
   const insights = [];
   const foodSpend = txns?.transactions?.filter(t=>t.category==='Food & Dining').reduce((s,t)=>s+Math.abs(t.amount),0)||0;
