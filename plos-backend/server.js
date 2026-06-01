@@ -593,7 +593,8 @@ app.get('/api/gmail/callback', async (req, res) => {
 app.get('/api/gmail/status', authMiddleware, (req, res) => {
   const connected = getSetting('gmail_connected') === '1';
   const tokens = db.prepare('SELECT expiry_date FROM gmail_tokens WHERE id=1').get();
-  ok(res, { connected, token_valid: tokens ? (tokens.expiry_date > Date.now()) : false });
+  const hasSyncedData = db.prepare('SELECT COUNT(*) as c FROM emails WHERE gmail_id IS NOT NULL').get().c > 0;
+  ok(res, { connected, token_valid: tokens ? (tokens.expiry_date > Date.now()) : false, has_synced_data: hasSyncedData });
 });
 
 app.post('/api/gmail/sync', authMiddleware, async (req, res) => {
@@ -605,18 +606,25 @@ app.post('/api/gmail/sync', authMiddleware, async (req, res) => {
   if (!client) return err(res, 'OAuth credentials not configured');
   client.setCredentials({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
 
+  // Get date range from request (format: YYYY-MM-DD)
+  const { startDate, endDate } = req.body;
+  let q = 'subject:(statement OR EMI OR payment OR credited OR debited OR UPI OR NEFT OR IMPS)';
+  if (startDate) q += ` after:${startDate.replace(/-/g, '')}`;
+  if (endDate) q += ` before:${endDate.replace(/-/g, '')}`;
+  if (!startDate && !endDate) q += ' newer_than:7d'; // Default to last 7 days
+
   try {
     const gmail = googleApis.gmail({ version: 'v1', auth: client });
     const listRes = await gmail.users.messages.list({
       userId: 'me',
-      q: 'subject:(statement OR EMI OR payment OR credited OR debited OR UPI OR NEFT OR IMPS) newer_than:7d',
-      maxResults: 20,
+      q: q,
+      maxResults: 50,
     });
 
     const messages = listRes.data.messages || [];
     let parsed = 0;
 
-    for (const msg of messages.slice(0, 10)) {
+    for (const msg of messages.slice(0, 30)) {
       const existing = db.prepare('SELECT id FROM emails WHERE gmail_id=?').get(msg.id);
       if (existing) continue;
 
@@ -659,12 +667,24 @@ app.post('/api/gmail/sync', authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────
 
 app.get('/api/summary', authMiddleware, (req, res) => {
+  const gmail_synced = db.prepare('SELECT COUNT(*) as c FROM emails WHERE gmail_id IS NOT NULL').get().c > 0;
   const accounts = db.prepare('SELECT SUM(balance) as t FROM accounts').get();
   const inv      = db.prepare('SELECT SUM(current_value) as c FROM investments').get();
   const loans    = db.prepare('SELECT SUM(outstanding) as t FROM loans').get();
   const cards    = db.prepare('SELECT SUM(total_due) as t FROM credit_cards').get();
-  const cf       = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-06'`).get();
-  const cfPrev   = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-05'`).get();
+  
+  // If Gmail is synced, use only Gmail-period data; otherwise use all data
+  let cf, cfPrev;
+  if (gmail_synced) {
+    // Use current month only (2026-06)
+    cf   = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-06'`).get();
+    cfPrev = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-05'`).get();
+  } else {
+    // Show dummy data for demo
+    cf   = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-06'`).get();
+    cfPrev = db.prepare(`SELECT * FROM monthly_cashflow WHERE month='2026-05'`).get();
+  }
+  
   const totalAssets = (accounts.t||0) + (inv.c||0);
   const totalLiab   = (loans.t||0) + (cards.t||0);
   ok(res, {
@@ -675,6 +695,7 @@ app.get('/api/summary', authMiddleware, (req, res) => {
     total_investments: inv.c||0, total_debt: loans.t||0,
     income_change: cfPrev ? (cf?.income||0) - cfPrev.income : 0,
     expense_change: cfPrev ? (cf?.expenses||0) - cfPrev.expenses : 0,
+    gmail_synced: gmail_synced,
   });
 });
 

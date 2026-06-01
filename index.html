@@ -417,6 +417,21 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
         <span class="pill pill-green">● Live</span>
       </div>
       <div class="kpi-grid" id="cfo-kpis"><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div></div>
+      <div id="gmail-sync-card" style="display:none" class="card">
+        <div class="card-header"><span class="card-title">📧 Sync Financial Emails from Gmail</span></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:12px">
+          <div style="flex:1">
+            <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">From Date</label>
+            <input type="date" id="gmail-sync-start" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          </div>
+          <div style="flex:1">
+            <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">To Date</label>
+            <input type="date" id="gmail-sync-end" style="width:100%;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+          </div>
+          <button class="btn btn-primary" onclick="syncGmailWithDates()" style="white-space:nowrap;margin-bottom:0">🔄 Sync Now</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3)">Leave dates blank to sync last 7 days. All financial keywords (statement, EMI, payment, salary, etc.) will be imported.</div>
+      </div>
       <div class="grid-70-30">
         <div class="card">
           <div class="card-header"><span class="card-title">Cashflow Trend — 12 Months</span></div>
@@ -961,6 +976,32 @@ async function syncGmail() {
   else showToast('Gmail sync failed — check connection');
 }
 
+async function syncGmailWithDates() {
+  const startDate = document.getElementById('gmail-sync-start').value;
+  const endDate = document.getElementById('gmail-sync-end').value;
+  
+  if (!startDate && !endDate) {
+    showToast('⏳ Syncing Gmail (last 7 days)…');
+  } else if (startDate && endDate) {
+    showToast(`⏳ Syncing Gmail from ${startDate} to ${endDate}…`);
+  } else {
+    showToast('⏳ Syncing Gmail…');
+  }
+  
+  const data = await api('/gmail/sync', { 
+    method:'POST', 
+    body: JSON.stringify({ startDate, endDate })
+  });
+  
+  if (data) {
+    showToast(`✅ Gmail synced: ${data.parsed} new emails imported`);
+    // Reload CFO dashboard to refresh data
+    setTimeout(() => loadCFO(), 1500);
+  } else {
+    showToast('Gmail sync failed — check connection');
+  }
+}
+
 // ── THEME ──
 function toggleTheme() {
   const html = document.documentElement;
@@ -1027,6 +1068,18 @@ async function loadCFO() {
   if(!s) return;
   const now = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
   document.getElementById('cfo-sub').textContent = `Last updated: ${now} · All systems live`;
+  
+  // Show Gmail sync card if Gmail is connected
+  const gmailStatus = await api('/gmail/status');
+  if (gmailStatus?.connected && !gmailStatus?.has_synced_data) {
+    document.getElementById('gmail-sync-card').style.display = 'block';
+    // Set default dates (30 days back to today)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - 30*24*60*60*1000);
+    document.getElementById('gmail-sync-start').value = thirtyDaysAgo.toISOString().split('T')[0];
+    document.getElementById('gmail-sync-end').value = today.toISOString().split('T')[0];
+  }
+  
   document.getElementById('cfo-kpis').innerHTML = `
     <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Net Worth</div><div class="kpi-value">${fmtL(s.net_worth)}</div><div class="kpi-badge neutral">Assets ${fmtL(s.total_assets)}</div></div>
     <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Monthly Income</div><div class="kpi-value">${fmtL(s.monthly_income)}</div><div class="kpi-badge ${s.income_change>=0?'up':'down'}">${s.income_change>=0?'▲':'▼'} ${fmt(Math.abs(s.income_change))} vs last</div></div>
