@@ -1127,10 +1127,15 @@ async function loadCFO() {
         </div>`;
     }
   }).join('');
+  
   // AI insights (rule-based from data)
   const insights = [];
-  const foodSpend = txns?.transactions?.filter(t=>t.category==='Food & Dining').reduce((s,t)=>s+Math.abs(t.amount),0)||0;
-  if(foodSpend>5000) insights.push({icon:'⚠️',title:'Spending Anomaly',text:`Food & Dining ${fmt(foodSpend)} this period — above average. Review frequency.`});
+  if (!s.gmail_synced) {
+    // Only show spending analysis for non-Gmail data
+    const txns = await api('/transactions?limit=50');
+    const foodSpend = txns?.transactions?.filter(t=>t.category==='Food & Dining').reduce((s,t)=>s+Math.abs(t.amount),0)||0;
+    if(foodSpend>5000) insights.push({icon:'⚠️',title:'Spending Anomaly',text:`Food & Dining ${fmt(foodSpend)} this period — above average. Review frequency.`});
+  }
   insights.push({icon:'🚀',title:'Wealth Velocity: Strong',text:`Net worth ${fmtL(s.net_worth)}. Savings rate ${s.savings_rate}% — outpacing inflation.`});
   if(s.total_liabilities > s.total_investments * 0.3) insights.push({icon:'💡',title:'Debt Ratio Alert',text:`Liabilities are ${((s.total_liabilities/s.total_assets)*100).toFixed(0)}% of assets. Focus on reducing high-interest debt.`});
   else insights.push({icon:'💡',title:'Debt Ratio Healthy',text:`Liabilities are ${((s.total_liabilities/s.total_assets)*100).toFixed(0)}% of assets — within safe range.`});
