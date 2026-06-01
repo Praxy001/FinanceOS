@@ -24,7 +24,12 @@ const DB_PATH  = process.env.DB_PATH || path.join(__dirname, 'plos.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'plos-secret-jwt-2026';
 const FRONTEND_URL = process.env.FRONTEND_URL || '*'; // Cloudflare Pages URL
 
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+app.use(cors({
+  origin: (origin, cb) => cb(null, true), // allow all origins
+  credentials: true,
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
@@ -531,7 +536,10 @@ function getOAuth2Client() {
   const clientId     = getSetting('google_client_id');
   const clientSecret = getSetting('google_client_secret');
   if (!clientId || !clientSecret) return null;
-  return new googleApis.auth.OAuth2(clientId, clientSecret, `http://localhost:${PORT}/api/gmail/callback`);
+  const base = process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : `http://localhost:${PORT}`;
+  return new googleApis.auth.OAuth2(clientId, clientSecret, `${base}/api/gmail/callback`);
 }
 
 app.get('/api/gmail/auth-url', authMiddleware, (req, res) => {
