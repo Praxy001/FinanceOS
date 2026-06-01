@@ -1069,13 +1069,10 @@ async function loadCFO() {
   const now = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
   document.getElementById('cfo-sub').textContent = `Last updated: ${now} · All systems live`;
   
-  // Show Gmail sync card if Gmail is connected
-  const gmailStatus = await api('/gmail/status');
-  if (gmailStatus?.connected) {
-    document.getElementById('gmail-sync-card').style.display = 'block';
-    // Set default dates (30 days back to today)
-    const today = new Date();
-    const thirtyDaysAgo = new Date(today.getTime() - 30*24*60*60*1000);
+  // Set default dates for Gmail sync card (30 days back to today)
+  const today = new Date();
+  const thirtyDaysAgo = new Date(today.getTime() - 30*24*60*60*1000);
+  if (document.getElementById('gmail-sync-start')) {
     document.getElementById('gmail-sync-start').value = thirtyDaysAgo.toISOString().split('T')[0];
     document.getElementById('gmail-sync-end').value = today.toISOString().split('T')[0];
   }
