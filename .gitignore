@@ -1,0 +1,4 @@
+plos-backend/node_modules/
+plos-backend/plos.db
+*.env
+.DS_Store

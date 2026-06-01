@@ -19,11 +19,12 @@ let googleApis = null;
 try { googleApis = require('googleapis').google; } catch(_) {}
 
 const app  = express();
-const PORT = 3000;
-const DB_PATH   = path.join(__dirname, 'plos.db');
+const PORT     = process.env.PORT || 3000;
+const DB_PATH  = process.env.DB_PATH || path.join(__dirname, 'plos.db');
 const JWT_SECRET = process.env.JWT_SECRET || 'plos-secret-jwt-2026';
+const FRONTEND_URL = process.env.FRONTEND_URL || '*'; // Cloudflare Pages URL
 
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
