@@ -799,7 +799,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 // Auto-detect: use Railway URL in production, localhost in development
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000/api'
-  : (window.__PLOS_API__ || 'https://plos-backend-production.up.railway.app/api');
+  : 'https://financeos-production.up.railway.app/api';
 let charts = {};
 let currentUser = null;
 
