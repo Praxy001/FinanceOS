@@ -1071,7 +1071,7 @@ async function loadCFO() {
   
   // Show Gmail sync card if Gmail is connected
   const gmailStatus = await api('/gmail/status');
-  if (gmailStatus?.connected && !gmailStatus?.has_synced_data) {
+  if (gmailStatus?.connected) {
     document.getElementById('gmail-sync-card').style.display = 'block';
     // Set default dates (30 days back to today)
     const today = new Date();
