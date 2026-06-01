@@ -1,6 +1,1639 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="refresh" content="0; url=/plos-saas.html"></head>
-<body><a href="/plos-saas.html">Loading PLOS…</a></body>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PLOS — Personal Life Operating System</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── THEME TOKENS ── */
+[data-theme="dark"] {
+  --bg:#0a0b0f; --surface:#111318; --surface2:#1a1d24; --surface3:#22262f;
+  --border:#2a2f3a; --text:#f1f5f9; --text2:#94a3b8; --text3:#64748b;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+[data-theme="light"] {
+  --bg:#f0f2f5; --surface:#ffffff; --surface2:#f8fafc; --surface3:#f1f5f9;
+  --border:#e2e8f0; --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+}
+:root {
+  --accent:#6366f1; --accent2:#8b5cf6; --green:#10b981; --red:#ef4444;
+  --yellow:#f59e0b; --blue:#3b82f6; --cyan:#06b6d4;
+  --sidebar-w:220px; --topbar-h:60px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;overflow:hidden;height:100vh;display:flex;transition:background .2s,color .2s;}
+
+/* SIDEBAR */
+#sidebar{width:var(--sidebar-w);height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;}
+.logo-text{font-size:15px;font-weight:700;}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;}
+.sidebar-section{padding:10px 8px 2px;}
+.sidebar-section-label{font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:0 8px 6px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:1px;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(99,102,241,.15);color:var(--accent);}
+.nav-item .icon{font-size:15px;width:20px;text-align:center;}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;}
+.nav-badge.green{background:var(--green);}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
+.topbar-title{font-size:15px;font-weight:700;flex:1;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;width:240px;cursor:pointer;}
+.search-box span{color:var(--text3);}
+.search-placeholder{color:var(--text3);font-size:13px;flex:1;}
+.kbd{background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;color:var(--text3);}
+.topbar-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;position:relative;flex-shrink:0;}
+.topbar-btn:hover{background:var(--surface3);}
+.notif-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid var(--surface);}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:20px;}
+.dashboard{display:none;}
+.dashboard.active{display:block;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:16px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;transition:background .2s;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-color,var(--accent));}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.kpi-value{font-size:21px;font-weight:800;letter-spacing:-.5px;}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:5px;}
+.kpi-badge.up{background:rgba(16,185,129,.15);color:var(--green);}
+.kpi-badge.down{background:rgba(239,68,68,.15);color:var(--red);}
+.kpi-badge.neutral{background:rgba(148,163,184,.1);color:var(--text2);}
+
+/* LAYOUTS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.grid-70-30{display:grid;grid-template-columns:1fr .43fr;gap:12px;margin-bottom:12px;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:background .2s;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:13px;font-weight:700;}
+.card-action{font-size:11px;color:var(--accent);cursor:pointer;background:none;border:none;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border);}
+.data-table td{padding:10px 4px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table td:first-child{color:var(--text);}
+.amt-green{color:var(--green);font-weight:600;}
+.amt-red{color:var(--red);font-weight:600;}
+.amt-yellow{color:var(--yellow);font-weight:600;}
+
+/* PILLS */
+.pill{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.pill-green{background:rgba(16,185,129,.15);color:var(--green);}
+.pill-red{background:rgba(239,68,68,.15);color:var(--red);}
+.pill-yellow{background:rgba(245,158,11,.15);color:var(--yellow);}
+.pill-blue{background:rgba(59,130,246,.15);color:var(--blue);}
+.pill-purple{background:rgba(99,102,241,.15);color:var(--accent);}
+
+/* PROGRESS */
+.progress-bar{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:4px;}
+.progress-fill{height:100%;border-radius:3px;}
+
+/* TRANSACTIONS */
+.txn-item{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);}
+.txn-item:last-child{border-bottom:none;}
+.txn-icon{width:34px;height:34px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.txn-name{font-size:13px;font-weight:500;}
+.txn-cat{font-size:11px;color:var(--text3);}
+.txn-amount{margin-left:auto;font-size:14px;font-weight:700;white-space:nowrap;}
+
+/* ALERTS */
+.alert-item{display:flex;align-items:flex-start;gap:11px;padding:12px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--accent-color,var(--accent));margin-bottom:8px;}
+.alert-icon{font-size:17px;margin-top:1px;}
+.alert-title{font-size:13px;font-weight:600;}
+.alert-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.alert-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.resolve-btn{font-size:10px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--text2);}
+.resolve-btn:hover{color:var(--green);border-color:var(--green);}
+
+/* INSIGHTS */
+.insight-list{display:flex;flex-direction:column;gap:10px;}
+.insight-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+.insight-icon{font-size:17px;flex-shrink:0;}
+.insight-text{font-size:12px;color:var(--text2);line-height:1.5;}
+.insight-text strong{color:var(--text);display:block;margin-bottom:2px;font-size:13px;}
+
+/* DONUT LEGEND */
+.donut-legend{display:flex;flex-direction:column;gap:6px;}
+.legend-item{display:flex;align-items:center;gap:8px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.legend-label{font-size:12px;color:var(--text2);flex:1;}
+.legend-pct{font-size:12px;font-weight:600;}
+
+/* HEATMAP */
+.heatmap{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;}
+.heat-cell{height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.7);font-weight:600;}
+[data-theme="light"] .heat-cell{color:rgba(0,0,0,.5);}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;}
+.cal-day-label{font-size:10px;color:var(--text3);padding:4px 0;}
+.cal-day{font-size:12px;padding:6px 4px;border-radius:6px;cursor:pointer;color:var(--text2);}
+.cal-day:hover{background:var(--surface2);}
+.cal-day.today{background:var(--accent);color:#fff;font-weight:700;}
+.cal-day.has-event{color:var(--text);font-weight:600;}
+.cal-day.has-event::after{content:'•';display:block;font-size:10px;color:var(--red);line-height:.5;}
+
+/* VAULT */
+.vault-item{display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:8px;}
+.vault-icon{font-size:20px;}
+.vault-name{font-size:13px;font-weight:500;}
+.vault-type{font-size:11px;color:var(--text3);}
+
+/* PASSWORD */
+.pwd-item{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);}
+.pwd-item:last-child{border-bottom:none;}
+.pwd-icon{width:33px;height:33px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:15px;}
+
+/* SETTINGS */
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{font-size:13px;font-weight:500;}
+.settings-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+.toggle{width:42px;height:22px;background:var(--surface3);border-radius:11px;cursor:pointer;position:relative;transition:background .2s;border:1px solid var(--border);flex-shrink:0;}
+.toggle.on{background:var(--accent);border-color:var(--accent);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;}
+.toggle.on::after{transform:translateX(20px);}
+.connect-btn{padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);transition:all .15s;}
+.connect-btn.connected{background:rgba(16,185,129,.1);border-color:var(--green);color:var(--green);}
+.connect-btn:hover{background:var(--surface3);}
+
+/* AI PANEL */
+.ai-fab{position:fixed;right:20px;bottom:20px;width:50px;height:50px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 6px 24px rgba(99,102,241,.4);z-index:999;transition:transform .2s;}
+.ai-fab:hover{transform:scale(1.1);}
+#ai-panel{position:fixed;right:20px;bottom:20px;width:350px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);z-index:1000;display:none;flex-direction:column;max-height:460px;}
+#ai-panel.open{display:flex;}
+.ai-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ai-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.ai-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ai-messages{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:9px;}
+.ai-msg{max-width:86%;padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.55;}
+.ai-msg.bot{background:var(--surface2);color:var(--text2);align-self:flex-start;}
+.ai-msg.user{background:var(--accent);color:#fff;align-self:flex-end;}
+.ai-input-row{display:flex;gap:8px;padding:11px;border-top:1px solid var(--border);}
+.ai-input-row input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--text);outline:none;}
+.ai-send{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0;color:#fff;}
+
+/* NOTIFICATIONS */
+#notif-panel{position:fixed;right:16px;top:66px;width:310px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);z-index:1000;display:none;flex-direction:column;max-height:380px;overflow-y:auto;}
+#notif-panel.open{display:flex;}
+.notif-header{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;}
+.notif-item{padding:11px 16px;border-bottom:1px solid var(--border);cursor:pointer;}
+.notif-item:hover{background:var(--surface2);}
+.notif-item:last-child{border-bottom:none;}
+.notif-title{font-size:12px;font-weight:500;}
+.notif-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* SEARCH MODAL */
+#search-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:none;align-items:flex-start;justify-content:center;padding-top:80px;}
+#search-modal.open{display:flex;}
+.search-box-modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:580px;overflow:hidden;box-shadow:var(--shadow);}
+.search-input-row{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--border);}
+.search-input-row input{flex:1;background:none;border:none;outline:none;font-size:15px;color:var(--text);}
+.search-section{padding:8px 18px 4px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;}
+.search-result{padding:10px 18px;display:flex;align-items:center;gap:11px;cursor:pointer;}
+.search-result:hover{background:var(--surface2);}
+.search-result-icon{font-size:17px;}
+.search-result-title{font-size:13px;font-weight:500;}
+.search-result-sub{font-size:11px;color:var(--text3);}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:16px;font-weight:800;}
+.section-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+
+/* LOADING SKELETON */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:6px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ADD FORM */
+.add-form{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;display:none;}
+.add-form.open{display:block;}
+.form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px;}
+.form-group label{font-size:11px;color:var(--text3);}
+.form-group input, .form-group select{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:13px;color:var(--text);outline:none;}
+.form-group input:focus, .form-group select:focus{border-color:var(--accent);}
+.btn{padding:7px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.9;}
+.btn-ghost{background:var(--surface3);color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:380px;box-shadow:0 24px 80px rgba(0,0,0,.4);}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;}
+.login-logo-text{font-size:20px;font-weight:800;}
+.login-logo-sub{font-size:11px;color:var(--text3);}
+.login-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:24px;}
+.login-tab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s;}
+.login-tab.active{background:var(--accent);color:#fff;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12px;color:var(--text3);margin-bottom:6px;}
+.login-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:14px;color:var(--text);outline:none;transition:border-color .15s;}
+.login-field input:focus{border-color:var(--accent);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;margin-top:6px;transition:opacity .15s;}
+.login-btn:hover{opacity:.9;}
+.login-hint{text-align:center;font-size:12px;color:var(--text3);margin-top:16px;}
+.login-hint span{color:var(--accent);cursor:pointer;}
+.login-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--red);margin-bottom:14px;display:none;}
+.login-error.show{display:block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;box-shadow:var(--shadow);z-index:3000;transition:opacity .3s;pointer-events:none;}
+.toast.hidden{opacity:0;}
+
+/* SPINNER */
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">P</div>
+      <div><div class="login-logo-text">PLOS</div><div class="login-logo-sub">Personal Life Operating System</div></div>
+    </div>
+    <div class="login-tabs">
+      <div class="login-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="login-tab" id="tab-register" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div class="login-error" id="auth-error"></div>
+    <div id="register-name-field" class="login-field" style="display:none">
+      <label>Full Name</label>
+      <input type="text" id="reg-name" placeholder="Prakhar Chawda">
+    </div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="auth-email" placeholder="you@example.com" value="prakhar@networkfp.com">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••" value="plos2026" onkeydown="if(event.key==='Enter')doAuth()">
+    </div>
+    <button class="login-btn" onclick="doAuth()" id="auth-btn">Sign In →</button>
+    <div class="login-hint">Default: prakhar@networkfp.com / <span onclick="document.getElementById('auth-password').value='plos2026'">plos2026</span></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">P</div>
+    <div>
+      <div class="logo-text">PLOS</div>
+      <div class="logo-sub">Life OS · v1.0</div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Finance</div>
+    <div class="nav-item active" onclick="navigate('cfo')"><span class="icon">💰</span>CFO Dashboard</div>
+    <div class="nav-item" onclick="navigate('banking')"><span class="icon">🏦</span>Banking<span class="nav-badge green" id="badge-banking">3</span></div>
+    <div class="nav-item" onclick="navigate('credit')"><span class="icon">💳</span>Credit & Loans</div>
+    <div class="nav-item" onclick="navigate('investments')"><span class="icon">📈</span>Investments</div>
+    <div class="nav-item" onclick="navigate('tax')"><span class="icon">🧾</span>Taxes<span class="nav-badge" id="badge-tax">1</span></div>
+    <div class="nav-item" onclick="navigate('budget')"><span class="icon">📊</span>Budgeting</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Productivity</div>
+    <div class="nav-item" onclick="navigate('ea')"><span class="icon">🗓️</span>Executive Assist</div>
+    <div class="nav-item" onclick="navigate('risk')"><span class="icon">🛡️</span>Risk Center<span class="nav-badge" id="badge-risk">2</span></div>
+    <div class="nav-item" onclick="navigate('insights')"><span class="icon">🧠</span>Insights</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Vault</div>
+    <div class="nav-item" onclick="navigate('vault')"><span class="icon">🔒</span>Digital Vault</div>
+    <div class="nav-item" onclick="navigate('passwords')"><span class="icon">🔑</span>Passwords</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">System</div>
+    <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span>Settings</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-title" id="page-title">CFO Dashboard</div>
+    <div class="search-box" onclick="openSearch()">
+      <span>🔍</span>
+      <span class="search-placeholder">Search everything…</span>
+      <span class="kbd">⌘K</span>
+    </div>
+    <div class="topbar-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-btn">🌙</div>
+    <div class="topbar-btn" onclick="toggleNotif()" id="notif-btn">🔔<div class="notif-dot" id="notif-dot"></div></div>
+    <div class="topbar-btn" onclick="toggleAI()">✨</div>
+    <div class="avatar">PK</div>
+  </div>
+
+  <div id="content">
+
+    <!-- CFO -->
+    <div id="dash-cfo" class="dashboard active">
+      <div class="section-header">
+        <div><div class="section-title">CFO Dashboard</div><div class="section-sub" id="cfo-sub">Loading…</div></div>
+        <span class="pill pill-green">● Live</span>
+      </div>
+      <div class="kpi-grid" id="cfo-kpis"><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div><div class="kpi-card skeleton" style="height:90px"></div></div>
+      <div class="grid-70-30">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Cashflow Trend — 12 Months</span></div>
+          <div style="position:relative;height:200px"><canvas id="cashflowChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Assets vs Liabilities</span></div>
+          <canvas id="assetsChart" style="max-height:140px"></canvas>
+          <div class="donut-legend" id="assets-legend" style="margin-top:12px"></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent Transactions</span><button class="card-action" onclick="navigate('banking')">View all →</button></div>
+          <div id="cfo-txns">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">AI Insights</span><span class="pill pill-purple">AI</span></div>
+          <div id="cfo-insights" class="insight-list">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EA -->
+    <div id="dash-ea" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Executive Assistant</div><div class="section-sub">Monday, June 1, 2026</div></div>
+        <span class="pill pill-yellow" id="ea-urgent-badge">Loading…</span>
+      </div>
+      <div class="kpi-grid" id="ea-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Today's Agenda</span>
+            <button class="btn btn-primary" style="font-size:11px;padding:5px 10px" onclick="toggleAddEvent()">+ Add</button>
+          </div>
+          <div class="add-form" id="event-form">
+            <div class="form-row">
+              <div class="form-group" style="flex:2"><label>Title</label><input id="evt-title" placeholder="Meeting title"></div>
+              <div class="form-group"><label>Time</label><input id="evt-time" type="time" value="09:00"></div>
+              <div class="form-group"><label>Type</label>
+                <select id="evt-type"><option value="meeting">Meeting</option><option value="payment">Payment</option><option value="compliance">Compliance</option></select>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <div class="form-group" style="flex:2"><label>Description</label><input id="evt-desc" placeholder="Details (optional)"></div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <button class="btn btn-primary" onclick="addEvent()">Save</button>
+                <button class="btn btn-ghost" onclick="toggleAddEvent()">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div id="ea-events">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Priority Inbox</span><span class="pill pill-purple">AI Filtered</span></div>
+          <div id="ea-emails">Loading…</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Upcoming Payments & EMIs</span></div>
+        <div id="ea-payments">Loading…</div>
+      </div>
+    </div>
+
+    <!-- BANKING -->
+    <div id="dash-banking" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Cashflow & Banking</div><div class="section-sub">Real-time money movement</div></div>
+      </div>
+      <div class="kpi-grid" id="banking-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Account Summary</span></div>
+          <div id="banking-accounts">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Monthly Inflow / Outflow Heatmap</span></div>
+          <div class="heatmap" id="heatmap" style="margin-bottom:8px"></div>
+          <div style="display:flex;gap:10px;font-size:11px;color:var(--text3);align-items:center;margin-top:6px">
+            <div style="width:12px;height:12px;background:rgba(16,185,129,.2);border-radius:2px"></div>Low
+            <div style="width:12px;height:12px;background:rgba(16,185,129,.6);border-radius:2px"></div>Medium
+            <div style="width:12px;height:12px;background:rgba(16,185,129,1);border-radius:2px"></div>High
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Transaction Stream</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" style="font-size:11px;padding:5px 10px" onclick="toggleAddTxn()">+ Add</button>
+            <button class="card-action" onclick="exportTxns()">Export CSV →</button>
+          </div>
+        </div>
+        <div class="add-form" id="txn-form">
+          <div class="form-row">
+            <div class="form-group" style="flex:2"><label>Description</label><input id="txn-desc" placeholder="e.g. Swiggy Order"></div>
+            <div class="form-group"><label>Category</label>
+              <select id="txn-cat">
+                <option>Food & Dining</option><option>Transport</option><option>Utilities</option>
+                <option>Shopping</option><option>Investments</option><option>Loans</option>
+                <option>Subscriptions</option><option>Health</option><option>Insurance</option><option>Income</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Amount (−debit/+credit)</label><input id="txn-amount" type="number" placeholder="-500"></div>
+          </div>
+          <div class="form-row" style="margin-top:8px">
+            <div class="form-group"><label>Date</label><input id="txn-date" type="date"></div>
+            <div class="form-group"><label>Type</label><select id="txn-type"><option>UPI</option><option>NEFT</option><option>IMPS</option><option>Auto-debit</option><option>Cash</option></select></div>
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <button class="btn btn-primary" onclick="addTxn()">Save</button>
+              <button class="btn btn-ghost" onclick="toggleAddTxn()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div id="banking-txns">Loading…</div>
+      </div>
+    </div>
+
+    <!-- CREDIT -->
+    <div id="dash-credit" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Credit & Debt</div><div class="section-sub">Debt optimization and credit health</div></div>
+      </div>
+      <div class="kpi-grid" id="credit-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Loan Portfolio</span></div>
+          <div id="credit-loans">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Credit Cards</span></div>
+          <div id="credit-cards">Loading…</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">EMI Calendar — June 2026</span></div>
+          <div class="cal-grid">
+            <div class="cal-day-label">Sun</div><div class="cal-day-label">Mon</div><div class="cal-day-label">Tue</div>
+            <div class="cal-day-label">Wed</div><div class="cal-day-label">Thu</div><div class="cal-day-label">Fri</div><div class="cal-day-label">Sat</div>
+          </div>
+          <div class="cal-grid" id="emi-calendar" style="margin-top:4px"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">AI Payoff Strategy</span><span class="pill pill-purple">AI</span></div>
+          <div id="credit-insights" class="insight-list">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVESTMENTS -->
+    <div id="dash-investments" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Investments</div><div class="section-sub">Portfolio overview and wealth tracking</div></div>
+      </div>
+      <div class="kpi-grid" id="inv-kpis"></div>
+      <div class="grid-70-30">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Net Worth Trajectory</span></div>
+          <div style="position:relative;height:200px"><canvas id="nwChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Asset Allocation</span></div>
+          <canvas id="allocChart" style="max-height:160px"></canvas>
+          <div class="donut-legend" id="alloc-legend" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Holdings</span><span class="pill pill-purple" id="inv-ai-badge">Loading…</span></div>
+        <div id="inv-holdings">Loading…</div>
+      </div>
+    </div>
+
+    <!-- TAX -->
+    <div id="dash-tax" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Tax Dashboard</div><div class="section-sub">Compliance center for AY 2026-27</div></div>
+        <span class="pill pill-red" id="tax-notice-badge">1 Notice Pending</span>
+      </div>
+      <div class="kpi-grid" id="tax-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Tax Calendar & Alerts</span></div>
+          <div id="tax-alerts">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Filing Readiness</span><span class="pill pill-purple">AI Score</span></div>
+          <div id="tax-readiness">Loading…</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Tax Computation</span></div>
+        <div id="tax-items">Loading…</div>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+    <div id="dash-budget" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Budgeting</div><div class="section-sub" id="budget-sub">June 2026</div></div>
+        <span class="pill" id="budget-badge">Loading…</span>
+      </div>
+      <div class="kpi-grid" id="budget-kpis"></div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header"><span class="card-title">Category Breakdown</span><button class="card-action" onclick="toggleAddBudget()">Edit Budget →</button></div>
+        <div id="budget-categories">Loading…</div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">AI Insights</span><span class="pill pill-purple">AI</span></div>
+          <div id="budget-insights" class="insight-list">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">6-Month Spend Trend</span></div>
+          <div style="position:relative;height:180px"><canvas id="spendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RISK -->
+    <div id="dash-risk" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Risk Center</div><div class="section-sub">Real-time financial threat monitoring</div></div>
+        <span class="pill pill-red" id="risk-badge">Loading…</span>
+      </div>
+      <div class="kpi-grid" id="risk-kpis"></div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Active Alerts</span></div>
+        <div id="risk-alerts">Loading…</div>
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div id="dash-insights" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Insights — AI Brain</div><div class="section-sub">Intelligence layer across all modules</div></div>
+        <span class="pill pill-purple">AI Powered</span>
+      </div>
+      <div class="kpi-grid" id="insights-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Top Spend Categories (30 days)</span></div>
+          <div id="insights-spend">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Wealth Trajectory</span></div>
+          <div style="position:relative;height:200px"><canvas id="wealthChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Behavior Analysis</span><span class="pill pill-purple">AI</span></div>
+        <div id="insights-behavior" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
+      </div>
+    </div>
+
+    <!-- VAULT -->
+    <div id="dash-vault" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Digital Vault</div><div class="section-sub" id="vault-sub">Loading…</div></div>
+        <span class="pill pill-yellow" id="vault-badge">Loading…</span>
+      </div>
+      <div class="kpi-grid" id="vault-kpis"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Documents</span>
+            <button class="btn btn-primary" style="font-size:11px;padding:5px 10px" onclick="toggleAddDoc()">+ Upload</button>
+          </div>
+          <div class="add-form" id="doc-form">
+            <div class="form-row">
+              <div class="form-group" style="flex:2"><label>Document Name</label><input id="doc-name" placeholder="e.g. Passport"></div>
+              <div class="form-group"><label>Category</label>
+                <select id="doc-cat"><option>Identity</option><option>Finance</option><option>Legal</option><option>Insurance</option></select>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <div class="form-group"><label>Expiry Date (optional)</label><input id="doc-expiry" type="date"></div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <button class="btn btn-primary" onclick="addDoc()">Save</button>
+                <button class="btn btn-ghost" onclick="toggleAddDoc()">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div id="vault-docs">Loading…</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">AI Document Alerts</span><span class="pill pill-purple">AI</span></div>
+          <div id="vault-alerts" class="insight-list">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSWORDS -->
+    <div id="dash-passwords" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Password Vault</div><div class="section-sub" id="pwd-sub">Loading…</div></div>
+        <span class="pill pill-yellow" id="pwd-badge">Loading…</span>
+      </div>
+      <div class="kpi-grid" id="pwd-kpis"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Saved Credentials</span>
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 10px" onclick="toggleAddPwd()">+ Add</button>
+        </div>
+        <div class="add-form" id="pwd-form">
+          <div class="form-row">
+            <div class="form-group"><label>Site/App</label><input id="p-site" placeholder="e.g. HDFC Bank"></div>
+            <div class="form-group"><label>Username</label><input id="p-user" placeholder="email or username"></div>
+            <div class="form-group"><label>Strength</label><select id="p-strength"><option>Strong</option><option>Medium</option><option>Weak</option></select></div>
+          </div>
+          <div class="form-row" style="margin-top:8px">
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" onclick="addPwd()">Save</button>
+              <button class="btn btn-ghost" onclick="toggleAddPwd()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div id="pwd-list">Loading…</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="dash-settings" class="dashboard">
+      <div class="section-header">
+        <div><div class="section-title">Settings & Configuration</div><div class="section-sub">System control center · PLOS v2.0</div></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header"><span class="card-title">🤖 Gemini AI Setup</span></div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Enables real AI insights, smart chat, and auto-categorization across all dashboards.</div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Gemini API Key</label>
+              <input type="password" id="gemini-key-input" placeholder="AIza…" style="width:100%">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-primary" onclick="saveGeminiKey()">Save & Activate</button>
+              <span id="gemini-status" style="font-size:12px;color:var(--text3)">Not configured</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:10px">Get free key at <strong>aistudio.google.com</strong> → API Keys</div>
+          </div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header"><span class="card-title">📧 Gmail Integration</span></div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Auto-detect transactions, bills, and alerts from your inbox.</div>
+            <div class="form-group" style="margin-bottom:8px">
+              <label>Google OAuth Client ID</label>
+              <input type="text" id="google-client-id" placeholder="xxxx.apps.googleusercontent.com" style="width:100%">
+            </div>
+            <div class="form-group" style="margin-bottom:10px">
+              <label>Google OAuth Client Secret</label>
+              <input type="password" id="google-client-secret" placeholder="GOCSPX-…" style="width:100%">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveGoogleCreds()">Save Credentials</button>
+              <button class="btn btn-ghost" id="gmail-connect-btn" onclick="connectGmail()">Connect Gmail →</button>
+              <span id="gmail-status" style="font-size:12px;color:var(--text3)">Not connected</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:10px">Setup at <strong>console.cloud.google.com</strong> → APIs → Gmail API → Credentials. Redirect URI: <code>http://localhost:3000/api/gmail/callback</code></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Connected Accounts</span></div>
+            <div id="settings-connections">Loading…</div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header"><span class="card-title">AI Behavior</span></div>
+            <div id="settings-ai">Loading…</div>
+          </div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-header"><span class="card-title">Notifications</span></div>
+            <div id="settings-notifs">Loading…</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Account</span></div>
+            <div id="settings-account">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- NOTIFICATION PANEL -->
+<div id="notif-panel">
+  <div class="notif-header">🔔 Notifications <span style="font-size:11px;color:var(--accent);cursor:pointer" onclick="navigate('risk');toggleNotif()">View all</span></div>
+  <div id="notif-list">Loading…</div>
+</div>
+
+<!-- AI FAB -->
+<div class="ai-fab" onclick="toggleAI()">✨</div>
+
+<!-- AI PANEL -->
+<div id="ai-panel">
+  <div class="ai-header">
+    <div class="ai-title"><div class="ai-dot"></div>PLOS AI Assistant</div>
+    <div style="cursor:pointer;color:var(--text3);font-size:20px;line-height:1" onclick="toggleAI()">×</div>
+  </div>
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-msg bot">Hi Prakhar 👋 I'm your PLOS AI. Ask me anything about your finances, tasks, or life data.</div>
+    <div class="ai-msg bot">Try: <em>"How much did I spend?"</em> · <em>"EMIs due this week?"</em> · <em>"Net worth?"</em></div>
+  </div>
+  <div class="ai-input-row">
+    <input type="text" id="ai-input-box" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendAIMsg()">
+    <div class="ai-send" onclick="sendAIMsg()">↑</div>
+  </div>
+</div>
+
+<!-- SEARCH MODAL -->
+<div id="search-modal" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box-modal">
+    <div class="search-input-row">
+      <span style="font-size:18px">🔍</span>
+      <input type="text" id="search-input" placeholder="Search transactions, documents, emails…" oninput="handleSearch(this.value)">
+      <span style="font-size:11px;color:var(--text3)">ESC</span>
+    </div>
+    <div id="search-results">
+      <div class="search-section">Quick Navigation</div>
+      <div class="search-result" onclick="navigate('cfo');closeSearch()"><div class="search-result-icon">💰</div><div><div class="search-result-title">CFO Dashboard</div><div class="search-result-sub">Net worth · cashflow · insights</div></div></div>
+      <div class="search-result" onclick="navigate('risk');closeSearch()"><div class="search-result-icon">🛡️</div><div><div class="search-result-title">Risk Center</div><div class="search-result-sub">Critical alerts</div></div></div>
+      <div class="search-result" onclick="navigate('investments');closeSearch()"><div class="search-result-icon">📈</div><div><div class="search-result-title">Investments</div><div class="search-result-sub">Portfolio · returns · SIPs</div></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-detect: use Railway URL in production, localhost in development
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000/api'
+  : 'https://financeos-production.up.railway.app/api';
+let charts = {};
+let currentUser = null;
+
+// ── AUTH ──
+function getToken() { return localStorage.getItem('plos_token'); }
+function setToken(t) { localStorage.setItem('plos_token', t); }
+function clearToken() { localStorage.removeItem('plos_token'); localStorage.removeItem('plos_user'); }
+
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  setTimeout(() => t.classList.add('hidden'), duration);
+}
+
+// ── FETCH HELPER (auth-aware) ──
+async function api(path, opts={}) {
+  try {
+    const token = getToken();
+    const headers = { 'Content-Type':'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const r = await fetch(API + path, { headers, ...opts });
+    if (r.status === 401) { logout(); return null; }
+    const j = await r.json();
+    return j.data;
+  } catch(e) {
+    console.error('API error', path, e);
+    return null;
+  }
+}
+
+// ── AUTH FUNCTIONS ──
+let authMode = 'login';
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode==='login');
+  document.getElementById('tab-register').classList.toggle('active', mode==='register');
+  document.getElementById('register-name-field').style.display = mode==='register' ? 'block' : 'none';
+  document.getElementById('auth-btn').textContent = mode==='login' ? 'Sign In →' : 'Create Account →';
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+async function doAuth() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl    = document.getElementById('auth-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { errEl.textContent='Fill all fields'; errEl.classList.add('show'); return; }
+
+  const body = authMode === 'login'
+    ? { email, password }
+    : { name: document.getElementById('reg-name').value.trim(), email, password };
+
+  try {
+    const r = await fetch(API + '/auth/' + authMode, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.success) { errEl.textContent = j.error; errEl.classList.add('show'); return; }
+    setToken(j.data.token);
+    currentUser = j.data.user;
+    localStorage.setItem('plos_user', JSON.stringify(currentUser));
+    document.getElementById('login-screen').classList.add('hidden');
+    document.querySelector('.avatar').textContent = currentUser.avatar || 'PK';
+    await initApp();
+  } catch(e) {
+    errEl.textContent = 'Connection failed — is the server running?';
+    errEl.classList.add('show');
+  }
+}
+
+function logout() {
+  clearToken(); currentUser = null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('auth-password').value = '';
+}
+
+// ── GEMINI SETTINGS ──
+async function saveGeminiKey() {
+  const key = document.getElementById('gemini-key-input').value.trim();
+  if (!key) return showToast('Enter your Gemini API key');
+  await api('/settings/gemini_api_key', { method:'PATCH', body:JSON.stringify({value:key}) });
+  await api('/settings/gemini_api_active', { method:'PATCH', body:JSON.stringify({value:'1'}) });
+  document.getElementById('gemini-status').textContent = '✅ Active';
+  document.getElementById('gemini-status').style.color = 'var(--green)';
+  document.getElementById('gemini-key-input').value = '•'.repeat(20);
+  showToast('✅ Gemini AI activated! AI insights are now live.');
+}
+
+async function saveGoogleCreds() {
+  const cid = document.getElementById('google-client-id').value.trim();
+  const cs  = document.getElementById('google-client-secret').value.trim();
+  if (!cid || !cs) return showToast('Enter both Client ID and Secret');
+  await api('/settings/google_client_id', { method:'PATCH', body:JSON.stringify({value:cid}) });
+  await api('/settings/google_client_secret', { method:'PATCH', body:JSON.stringify({value:cs}) });
+  showToast('✅ Google credentials saved. Now click Connect Gmail.');
+}
+
+async function connectGmail() {
+  const data = await api('/gmail/auth-url');
+  if (!data?.url) return showToast('Save Google credentials first');
+  window.open(data.url, '_blank', 'width=500,height=600');
+}
+
+async function syncGmail() {
+  showToast('⏳ Syncing Gmail…');
+  const data = await api('/gmail/sync', { method:'POST', body:'{}' });
+  if (data) showToast(`✅ Gmail synced: ${data.parsed} new emails imported`);
+  else showToast('Gmail sync failed — check connection');
+}
+
+// ── THEME ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('plos-theme', next);
+  api('/settings/theme', {method:'PATCH', body:JSON.stringify({value:next})});
+  // Redraw charts for new theme
+  Object.values(charts).forEach(c => { if(c) c.destroy(); });
+  charts = {};
+  initCharts(currentPage);
+}
+(function() {
+  const saved = localStorage.getItem('plos-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-btn').textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// ── NAVIGATION ──
+const pageNames = {cfo:'CFO Dashboard',ea:'Executive Assistant',banking:'Cashflow & Banking',credit:'Credit & Debt',investments:'Investments',tax:'Tax Dashboard',budget:'Budgeting',risk:'Risk Center',insights:'Insights — AI Brain',vault:'Digital Vault',passwords:'Password Vault',settings:'Settings'};
+let currentPage = 'cfo';
+
+function navigate(page) {
+  document.querySelectorAll('.dashboard').forEach(d=>d.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('dash-'+page).classList.add('active');
+  document.getElementById('page-title').textContent = pageNames[page];
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if(n.getAttribute('onclick')?.includes("'"+page+"'")) n.classList.add('active');
+  });
+  currentPage = page;
+  loadPage(page);
+}
+
+// ── CHART DEFAULTS ──
+function chartDefaults() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    color: isDark ? 'rgba(255,255,255,.75)' : 'rgba(0,0,0,.7)',
+    gridColor: isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.06)',
+  };
+}
+
+// ── FORMAT HELPERS ──
+const fmt = n => '₹' + Math.abs(n).toLocaleString('en-IN');
+const fmtL = n => n >= 100000 ? '₹' + (n/100000).toFixed(1) + 'L' : fmt(n);
+const monthLabel = m => { const [y,mo]=m.split('-'); return ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(mo)]; };
+const severityColor = s => s==='critical'?'var(--red)':s==='warning'?'var(--yellow)':'var(--blue)';
+
+// ── PAGE LOADERS ──
+async function loadPage(page) {
+  const loaders = { cfo:loadCFO, ea:loadEA, banking:loadBanking, credit:loadCredit,
+    investments:loadInvestments, tax:loadTax, budget:loadBudget, risk:loadRisk,
+    insights:loadInsights, vault:loadVault, passwords:loadPasswords, settings:loadSettings };
+  if(loaders[page]) await loaders[page]();
+  initCharts(page);
+}
+
+// ── CFO ──
+async function loadCFO() {
+  const [s, txns] = await Promise.all([api('/summary'), api('/transactions?limit=5')]);
+  if(!s) return;
+  const now = new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
+  document.getElementById('cfo-sub').textContent = `Last updated: ${now} · All systems live`;
+  document.getElementById('cfo-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Net Worth</div><div class="kpi-value">${fmtL(s.net_worth)}</div><div class="kpi-badge neutral">Assets ${fmtL(s.total_assets)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Monthly Income</div><div class="kpi-value">${fmtL(s.monthly_income)}</div><div class="kpi-badge ${s.income_change>=0?'up':'down'}">${s.income_change>=0?'▲':'▼'} ${fmt(Math.abs(s.income_change))} vs last</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Monthly Expenses</div><div class="kpi-value">${fmtL(s.monthly_expenses)}</div><div class="kpi-badge ${s.expense_change<=0?'up':'down'}">${s.expense_change>0?'▲':'▼'} ${fmt(Math.abs(s.expense_change))} vs last</div></div>
+    <div class="kpi-card" style="--accent-color:var(--accent)"><div class="kpi-label">Savings Rate</div><div class="kpi-value">${s.savings_rate}%</div><div class="kpi-badge up">▲ Target: 45%</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Total Debt</div><div class="kpi-value">${fmtL(s.total_debt)}</div><div class="kpi-badge neutral">Liabilities ${fmtL(s.total_liabilities)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--cyan)"><div class="kpi-label">Investments</div><div class="kpi-value">${fmtL(s.total_investments)}</div><div class="kpi-badge up">▲ Growing</div></div>`;
+  if(txns?.transactions) {
+    document.getElementById('cfo-txns').innerHTML = txns.transactions.map(t=>`
+      <div class="txn-item">
+        <div class="txn-icon">${t.icon}</div>
+        <div><div class="txn-name">${t.description}</div><div class="txn-cat">${t.category} · ${t.date}</div></div>
+        <div class="txn-amount ${t.amount>0?'amt-green':'amt-red'}">${t.amount>0?'+':''}${fmt(t.amount)}</div>
+      </div>`).join('');
+  }
+  // AI insights (rule-based from data)
+  const insights = [];
+  const foodSpend = txns?.transactions?.filter(t=>t.category==='Food & Dining').reduce((s,t)=>s+Math.abs(t.amount),0)||0;
+  if(foodSpend>5000) insights.push({icon:'⚠️',title:'Spending Anomaly',text:`Food & Dining ${fmt(foodSpend)} this period — above average. Review frequency.`});
+  insights.push({icon:'🚀',title:'Wealth Velocity: Strong',text:`Net worth ${fmtL(s.net_worth)}. Savings rate ${s.savings_rate}% — outpacing inflation.`});
+  if(s.total_liabilities > s.total_investments * 0.3) insights.push({icon:'💡',title:'Debt Ratio Alert',text:`Liabilities are ${((s.total_liabilities/s.total_assets)*100).toFixed(0)}% of assets. Focus on reducing high-interest debt.`});
+  else insights.push({icon:'💡',title:'Debt Ratio Healthy',text:`Liabilities are ${((s.total_liabilities/s.total_assets)*100).toFixed(0)}% of assets — within safe range.`});
+  document.getElementById('cfo-insights').innerHTML = insights.map(i=>`
+    <div class="insight-item"><div class="insight-icon">${i.icon}</div><div class="insight-text"><strong>${i.title}</strong>${i.text}</div></div>`).join('');
+}
+
+// ── EA ──
+async function loadEA() {
+  const [events, emails, loans] = await Promise.all([api('/events?date=2026-06-01'), api('/emails'), api('/loans')]);
+  const typeColor = {meeting:'var(--blue)',payment:'var(--red)',compliance:'var(--yellow)'};
+  const urgent = emails?.filter(e=>e.priority==='urgent').length||0;
+  document.getElementById('ea-urgent-badge').textContent = urgent + ' Urgent';
+  document.getElementById('ea-urgent-badge').className = 'pill ' + (urgent>0?'pill-red':'pill-green');
+  document.getElementById('ea-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Today's Meetings</div><div class="kpi-value">${events?.filter(e=>e.type==='meeting').length||0}</div><div class="kpi-sub">${events?.[0]?.title||'No events'}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Priority Emails</div><div class="kpi-value">${emails?.length||0}</div><div class="kpi-sub">${urgent} require action</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">EMIs This Week</div><div class="kpi-value">${loans?.length||0} loans</div><div class="kpi-sub">Next: Jun 5</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Upcoming Payments</div><div class="kpi-value">${fmt(loans?.reduce((s,l)=>s+l.emi,0)||0)}</div><div class="kpi-sub">Total EMI load</div></div>`;
+  document.getElementById('ea-events').innerHTML = (events||[]).map(e=>`
+    <div class="alert-item" style="--accent-color:${typeColor[e.type]||'var(--accent)'}">
+      <div class="alert-icon">${e.type==='meeting'?'📞':e.type==='payment'?'💳':'📅'}</div>
+      <div><div class="alert-title">${e.title}</div><div class="alert-sub">${e.event_time} · ${e.description}</div></div>
+      <div class="alert-right"><span style="font-size:11px;color:var(--text3)">${e.event_time}</span></div>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">No events today</div>';
+  const priorityPill = {urgent:'pill-red',review:'pill-yellow',info:'pill-blue'};
+  document.getElementById('ea-emails').innerHTML = (emails||[]).slice(0,6).map(e=>`
+    <div class="txn-item">
+      <div class="txn-icon">${e.icon}</div>
+      <div><div class="txn-name">${e.subject}</div><div class="txn-cat">${e.sender} · ${e.email_date}</div></div>
+      <span class="pill ${priorityPill[e.priority]||'pill-blue'}" style="white-space:nowrap">${e.priority}</span>
+    </div>`).join('');
+  const upcomingPayments = await api('/events?month=2026-06');
+  document.getElementById('ea-payments').innerHTML = `<table class="data-table"><thead><tr><th>Payment</th><th>Due</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+    ${(upcomingPayments||[]).filter(e=>e.type==='payment').map(e=>`<tr><td>${e.title}</td><td>${e.event_date}</td><td class="amt-red">${e.description}</td><td><span class="pill pill-yellow">Due Soon</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ── BANKING ──
+async function loadBanking() {
+  const [accounts, txns] = await Promise.all([api('/accounts'), api('/transactions?limit=20')]);
+  const totalBal = accounts?.reduce((s,a)=>s+a.balance,0)||0;
+  const cfData = await api('/cashflow');
+  const curr = cfData?.[cfData.length-1];
+  document.getElementById('banking-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Total Balance</div><div class="kpi-value">${fmtL(totalBal)}</div><div class="kpi-badge up">Across ${accounts?.length||0} accounts</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">This Month Inflow</div><div class="kpi-value">${fmtL(curr?.income||0)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">This Month Outflow</div><div class="kpi-value">${fmtL(curr?.expenses||0)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Net Cashflow</div><div class="kpi-value">${fmtL((curr?.income||0)-(curr?.expenses||0))}</div><div class="kpi-badge up">Positive</div></div>`;
+  document.getElementById('banking-accounts').innerHTML = `<table class="data-table"><thead><tr><th>Account</th><th>Bank</th><th>Type</th><th>Balance</th></tr></thead><tbody>
+    ${(accounts||[]).map(a=>`<tr><td>●●●● ${a.account_no.slice(-4)}</td><td>${a.bank}</td><td>${a.type}</td><td class="amt-green">${fmt(a.balance)}</td></tr>`).join('')}
+  </tbody></table>`;
+  renderHeatmap(cfData);
+  renderTxns(txns?.transactions||[]);
+}
+
+function renderHeatmap(cfData) {
+  const el = document.getElementById('heatmap');
+  if(!el||!cfData) return;
+  const max = Math.max(...cfData.map(c=>c.income));
+  el.innerHTML = cfData.map(c=>{
+    const v = c.income/max; const g=Math.round(v*185);
+    return `<div class="heat-cell" style="background:rgba(16,${g},129,${v})" title="${monthLabel(c.month)}: ${fmt(c.income)}">${monthLabel(c.month)}</div>`;
+  }).join('');
+}
+
+function renderTxns(txns) {
+  document.getElementById('banking-txns').innerHTML = txns.map(t=>`
+    <div class="txn-item">
+      <div class="txn-icon">${t.icon}</div>
+      <div><div class="txn-name">${t.description}</div><div class="txn-cat">${t.type} · ${t.date}</div></div>
+      <div class="txn-amount ${t.amount>0?'amt-green':'amt-red'}">${t.amount>0?'+':''}${fmt(t.amount)}</div>
+    </div>`).join('');
+}
+
+// ── CREDIT ──
+async function loadCredit() {
+  const [loans, cards] = await Promise.all([api('/loans'), api('/credit-cards')]);
+  const totalDebt = loans?.reduce((s,l)=>s+l.outstanding,0)||0;
+  const totalEMI = loans?.reduce((s,l)=>s+l.emi,0)||0;
+  const totalLimit = cards?.reduce((s,c)=>s+c.card_limit,0)||1;
+  const totalUsed = cards?.reduce((s,c)=>s+c.used,0)||0;
+  const utilPct = ((totalUsed/totalLimit)*100).toFixed(0);
+  document.getElementById('credit-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Credit Score</div><div class="kpi-value">762</div><div class="kpi-badge up">▲ 18 pts this year</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Credit Utilization</div><div class="kpi-value">${utilPct}%</div><div class="kpi-sub">${utilPct<30?'Healthy below 30%':'⚠️ Above 30%'}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Total Outstanding</div><div class="kpi-value">${fmtL(totalDebt)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Monthly EMI Load</div><div class="kpi-value">${fmtL(totalEMI)}</div></div>`;
+  document.getElementById('credit-loans').innerHTML = `<table class="data-table"><thead><tr><th>Loan</th><th>Outstanding</th><th>EMI</th><th>Rate</th></tr></thead><tbody>
+    ${(loans||[]).map(l=>`<tr><td>${l.name} — ${l.lender}</td><td class="amt-red">${fmt(l.outstanding)}</td><td>${l.emi?fmt(l.emi):'—'}</td><td>${l.rate}%</td></tr>`).join('')}
+  </tbody></table>`;
+  document.getElementById('credit-cards').innerHTML = (cards||[]).map(c=>`
+    <div style="padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:600">${c.name}</span>
+        <span class="pill ${(c.used/c.card_limit)>0.3?'pill-red':'pill-green'}">${((c.used/c.card_limit)*100).toFixed(0)}% used</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">Limit: ${fmt(c.card_limit)} · Used: ${fmt(c.used)}</div>
+      <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${Math.min(100,(c.used/c.card_limit)*100).toFixed(0)}%;background:${(c.used/c.card_limit)>0.3?'var(--red)':'var(--green)'}"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Due: ${c.due_date} · Min due: ${fmt(c.min_due)} · Total: ${fmt(c.total_due)}</div>
+    </div>`).join('');
+  // EMI calendar
+  const emiDays = loans?.filter(l=>l.due_day).map(l=>l.due_day)||[];
+  const cal = document.getElementById('emi-calendar');
+  let html = Array(1).fill('<div></div>').join(''); // June starts Monday
+  for(let d=1;d<=30;d++) html+=`<div class="cal-day ${d===1?'today':''} ${emiDays.includes(d)?'has-event':''}">${d}</div>`;
+  cal.innerHTML = html;
+  // Insights
+  const highRateLoan = loans?.sort((a,b)=>b.rate-a.rate)[0];
+  document.getElementById('credit-insights').innerHTML = `
+    <div class="insight-item"><div class="insight-icon">🎯</div><div class="insight-text"><strong>Avalanche Strategy</strong>Close ${highRateLoan?.name||'Personal Loan'} (${highRateLoan?.rate||14}%) first. Saves most interest over time.</div></div>
+    <div class="insight-item"><div class="insight-icon">📉</div><div class="insight-text"><strong>Prepayment Opportunity</strong>₹50K prepayment on Home Loan will reduce tenure by ~14 months and save ₹1.2L interest.</div></div>
+    <div class="insight-item"><div class="insight-icon">💳</div><div class="insight-text"><strong>Credit Utilization ${utilPct}%</strong>${utilPct<30?'Healthy. Keep below 30% for best credit score impact.':'Above 30% — pay down card balance to improve score.'}</div></div>`;
+}
+
+// ── INVESTMENTS ──
+async function loadInvestments() {
+  const data = await api('/investments');
+  if(!data) return;
+  const {holdings, summary} = data;
+  const absReturn = summary.total_current - summary.total_invested;
+  const retPct = summary.total_invested > 0 ? ((absReturn/summary.total_invested)*100).toFixed(1) : 0;
+  const activeSIPs = holdings?.filter(h=>h.sip_active);
+  const sipTotal = activeSIPs?.reduce((s,h)=>s+h.sip_amount,0)||0;
+  document.getElementById('inv-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Total Portfolio</div><div class="kpi-value">${fmtL(summary.total_current)}</div><div class="kpi-badge up">▲ ${retPct}% absolute</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Invested Capital</div><div class="kpi-value">${fmtL(summary.total_invested)}</div><div class="kpi-sub">${holdings?.length||0} instruments</div></div>
+    <div class="kpi-card" style="--accent-color:var(--accent)"><div class="kpi-label">Absolute Return</div><div class="kpi-value">+${fmtL(absReturn)}</div><div class="kpi-badge up">▲ ${retPct}%</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Active SIPs</div><div class="kpi-value">${fmt(sipTotal)}/mo</div><div class="kpi-sub">${activeSIPs?.length||0} SIPs running</div></div>`;
+  // Underperformers
+  const underperf = holdings?.filter(h=>h.current_value<h.invested).length||0;
+  document.getElementById('inv-ai-badge').textContent = underperf > 0 ? `⚠️ ${underperf} Underperforming` : '✓ Portfolio Healthy';
+  document.getElementById('inv-holdings').innerHTML = `<table class="data-table"><thead><tr><th>Fund / Stock</th><th>Type</th><th>Invested</th><th>Current</th><th>Return</th><th>SIP</th></tr></thead><tbody>
+    ${(holdings||[]).map(h=>{
+      const ret = h.current_value - h.invested;
+      const pct = h.invested > 0 ? ((ret/h.invested)*100).toFixed(1) : 0;
+      return `<tr><td>${h.name}</td><td><span class="pill pill-blue">${h.type}</span></td><td>${fmt(h.invested)}</td><td>${fmt(h.current_value)}</td><td class="${ret>=0?'amt-green':'amt-red'}">${ret>=0?'+':''}${pct}%</td><td>${h.sip_active?fmt(h.sip_amount)+'/mo':'—'}</td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+  // Alloc chart
+  const types = {}; holdings?.forEach(h=>{ types[h.type]=(types[h.type]||0)+h.current_value; });
+  const colors = {'MF':'#6366f1','Stock':'#10b981','Gold':'#f59e0b','Index':'#3b82f6','Debt':'#06b6d4'};
+  const labels = Object.keys(types), vals = Object.values(types);
+  const total = vals.reduce((s,v)=>s+v,0);
+  document.getElementById('alloc-legend').innerHTML = labels.map((l,i)=>`
+    <div class="legend-item"><div class="legend-dot" style="background:${colors[l]||'#888'}"></div><span class="legend-label">${l}</span><span class="legend-pct">${((vals[i]/total)*100).toFixed(0)}%</span></div>`).join('');
+  if(!charts.alloc) {
+    const d = chartDefaults();
+    charts.alloc = new Chart(document.getElementById('allocChart'),{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:labels.map(l=>colors[l]||'#888'),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}});
+  }
+}
+
+// ── TAX ──
+async function loadTax() {
+  const data = await api('/tax');
+  if(!data) return;
+  const score = data.balanceDue > 0 ? 65 : 85;
+  document.getElementById('tax-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Estimated Tax</div><div class="kpi-value">${fmtL(data.estimatedTax)}</div><div class="kpi-sub">AY 2026-27</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">TDS Deducted</div><div class="kpi-value">${fmtL(data.tdsPaid)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Advance Tax Paid</div><div class="kpi-value">${fmtL(data.advanceTax)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Balance Due</div><div class="kpi-value">${fmtL(data.balanceDue)}</div><div class="kpi-sub">Due: Jul 31, 2026</div></div>`;
+  document.getElementById('tax-alerts').innerHTML = `
+    <div class="alert-item" style="--accent-color:var(--red)"><div class="alert-icon">🚨</div><div><div class="alert-title">TDS Notice — AY 2025-26</div><div class="alert-sub">Form 26AS vs ITR mismatch. Respond by Jun 15 or face penalty.</div></div></div>
+    <div class="alert-item" style="--accent-color:var(--yellow)"><div class="alert-icon">📅</div><div><div class="alert-title">Advance Tax Q1 FY27</div><div class="alert-sub">Due: Jun 15, 2026 · Estimated: ₹54,600</div></div></div>
+    <div class="alert-item" style="--accent-color:var(--blue)"><div class="alert-icon">📄</div><div><div class="alert-title">ITR Filing Deadline</div><div class="alert-sub">AY 2026-27 · Jul 31, 2026</div></div></div>`;
+  document.getElementById('tax-readiness').innerHTML = `
+    <div style="text-align:center;margin:14px 0">
+      <div style="font-size:36px;font-weight:800;color:var(--yellow)">${score}<span style="font-size:18px;color:var(--text3)">/100</span></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">Filing Readiness Score</div>
+    </div>
+    ${[['Form 16 received','green'],['Form 26AS verified','red','Mismatch'],['Capital gains statement','green'],['80C proof uploaded','yellow','Partial'],['TDS notice resolved','red','Pending']].map(([l,c,n])=>`
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span>${l}</span><span class="amt-${c}">${c==='green'?'✓ Done':c==='red'?'✗ '+(n||'Missing'):'⚡ '+(n||'')}</span>
+    </div>`).join('')}`;
+  document.getElementById('tax-items').innerHTML = `<table class="data-table"><thead><tr><th>Item</th><th>Amount</th><th>Description</th></tr></thead><tbody>
+    ${(data.items||[]).map(i=>`<tr><td>${i.category}</td><td class="${i.amount>0&&i.category!=='Standard Deduction'&&!i.category.startsWith('80')?'amt-green':'amt-red'}">${fmt(i.amount)}</td><td style="color:var(--text3)">${i.description||'—'}</td></tr>`).join('')}
+    <tr style="font-weight:700"><td>Taxable Income</td><td class="amt-red">${fmt(data.taxableIncome)}</td><td style="color:var(--text3)">After all deductions</td></tr>
+  </tbody></table>`;
+}
+
+// ── BUDGET ──
+async function loadBudget() {
+  const data = await api('/budget?month=2026-06');
+  if(!data) return;
+  const pct = Math.round((data.totalSpent/data.totalBudget)*100);
+  document.getElementById('budget-sub').textContent = `June 2026 · ${fmt(data.totalSpent)} spent of ${fmt(data.totalBudget)} budget`;
+  const badgeEl = document.getElementById('budget-badge');
+  badgeEl.textContent = pct + '% consumed';
+  badgeEl.className = 'pill ' + (pct>90?'pill-red':pct>70?'pill-yellow':'pill-green');
+  document.getElementById('budget-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Monthly Budget</div><div class="kpi-value">${fmtL(data.totalBudget)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Spent So Far</div><div class="kpi-value">${fmtL(data.totalSpent)}</div><div class="kpi-badge ${pct>90?'down':'neutral'}">${pct}% consumed</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Remaining</div><div class="kpi-value">${fmtL(data.totalBudget-data.totalSpent)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--accent)"><div class="kpi-label">Overspent Categories</div><div class="kpi-value">${data.categories.filter(c=>c.spent>c.budget).length}</div></div>`;
+  document.getElementById('budget-categories').innerHTML = data.categories.map(c=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:18px;width:24px">${c.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:500">${c.name}</span>
+          <span style="font-size:12px;color:${c.spent>c.budget?'var(--red)':'var(--text2)'}">${fmt(c.spent)} / ${fmt(c.budget)}</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,c.pct)}%;background:${c.spent>c.budget?'var(--red)':c.color}"></div></div>
+      </div>
+      <span class="pill ${c.spent>c.budget?'pill-red':'pill-green'}" style="width:42px;text-align:center">${c.pct}%</span>
+    </div>`).join('');
+  const overCats = data.categories.filter(c=>c.spent>c.budget);
+  document.getElementById('budget-insights').innerHTML = `
+    ${overCats.length?overCats.map(c=>`<div class="insight-item"><div class="insight-icon">⚠️</div><div class="insight-text"><strong>${c.name} Overspend</strong>${fmt(c.spent)} vs ${fmt(c.budget)} budget — ${c.pct}% consumed.</div></div>`).join(''):'<div class="insight-item"><div class="insight-icon">✅</div><div class="insight-text"><strong>All categories on track</strong>No budget breaches this month.</div></div>'}
+    <div class="insight-item"><div class="insight-icon">📺</div><div class="insight-text"><strong>Subscription Audit</strong>Review recurring subscriptions monthly to avoid silent cost creep.</div></div>`;
+}
+
+// ── RISK ──
+async function loadRisk() {
+  const data = await api('/alerts');
+  const critical = data?.counts?.find(c=>c.severity==='critical')?.count||0;
+  const warning = data?.counts?.find(c=>c.severity==='warning')?.count||0;
+  document.getElementById('risk-badge').textContent = critical + ' Critical';
+  document.getElementById('risk-badge').className = 'pill ' + (critical>0?'pill-red':'pill-green');
+  document.getElementById('badge-risk').textContent = critical;
+  document.getElementById('risk-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Critical Alerts</div><div class="kpi-value">${critical}</div><div class="kpi-sub">Immediate action needed</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Warnings</div><div class="kpi-value">${warning}</div><div class="kpi-sub">Monitor closely</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Risk Score</div><div class="kpi-value">${Math.max(0,100-critical*15-warning*7)}/100</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Total Active</div><div class="kpi-value">${(data?.alerts||[]).length}</div></div>`;
+  document.getElementById('risk-alerts').innerHTML = (data?.alerts||[]).map(a=>`
+    <div class="alert-item" style="--accent-color:${severityColor(a.severity)}">
+      <div class="alert-icon">${a.severity==='critical'?'🚨':a.severity==='warning'?'⚠️':'ℹ️'}</div>
+      <div style="flex:1"><div class="alert-title">${a.title}</div><div class="alert-sub">${a.description}</div></div>
+      <div class="alert-right">
+        <span class="pill ${a.severity==='critical'?'pill-red':a.severity==='warning'?'pill-yellow':'pill-blue'}">${a.severity}</span>
+        <button class="resolve-btn" onclick="resolveAlert(${a.id},this)">✓ Resolve</button>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text3);padding:16px;text-align:center">No active alerts 🎉</div>';
+}
+
+// ── INSIGHTS ──
+async function loadInsights() {
+  const data = await api('/insights');
+  const nwData = await api('/net-worth-history');
+  if(!data) return;
+  document.getElementById('insights-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Financial Health</div><div class="kpi-value">74/100</div><div class="kpi-badge up">▲ 6 pts</div></div>
+    <div class="kpi-card" style="--accent-color:var(--accent)"><div class="kpi-label">Investment Return</div><div class="kpi-value">+${fmtL(data.investment_return)}</div><div class="kpi-badge up">+${data.investment_return_pct}%</div></div>
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Avg Monthly Savings</div><div class="kpi-value">${fmtL(data.avg_monthly_savings)}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Stress Probability</div><div class="kpi-value">18%</div><div class="kpi-sub">Low · stable cashflow</div></div>`;
+  const maxSpend = data.top_spend_categories?.[0]?.total||1;
+  document.getElementById('insights-spend').innerHTML = (data.top_spend_categories||[]).map(c=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px"><span>${c.category}</span><span class="amt-red">${fmt(c.total)}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${((c.total/maxSpend)*100).toFixed(0)}%;background:var(--accent)"></div></div>
+    </div>`).join('');
+  document.getElementById('insights-behavior').innerHTML = `
+    <div class="insight-item"><div class="insight-icon">🛍️</div><div class="insight-text"><strong>Impulse Spend Pattern</strong>Weekend spends are 2.4× weekday average. Saturday evening highest-risk window.</div></div>
+    <div class="insight-item"><div class="insight-icon">⏰</div><div class="insight-text"><strong>SIP Consistency</strong>Zero missed SIPs in 24 consecutive months — powerful compounding moat.</div></div>
+    <div class="insight-item"><div class="insight-icon">🔄</div><div class="insight-text"><strong>Life Inefficiency</strong>6 subscriptions, ~4 hrs/week use. Cost: ₹722/hr. Audit recommended.</div></div>`;
+}
+
+// ── VAULT ──
+async function loadVault() {
+  const data = await api('/vault');
+  document.getElementById('vault-sub').textContent = `${data?.documents?.length||0} documents · Secure repository`;
+  document.getElementById('vault-badge').textContent = (data?.expiring_count||0) + ' Expiring Soon';
+  document.getElementById('vault-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Total Documents</div><div class="kpi-value">${data?.documents?.length||0}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Expiring Soon</div><div class="kpi-value">${data?.expiring_count||0}</div><div class="kpi-sub">Within 90 days</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">OCR Indexed</div><div class="kpi-value">${data?.documents?.filter(d=>d.ocr_indexed).length||0}</div><div class="kpi-sub">Searchable</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Categories</div><div class="kpi-value">${data?.by_category?.length||0}</div></div>`;
+  document.getElementById('vault-docs').innerHTML = (data?.documents||[]).map(d=>`
+    <div class="vault-item" id="doc-${d.id}">
+      <div class="vault-icon">${d.icon}</div>
+      <div style="flex:1"><div class="vault-name">${d.name}</div><div class="vault-type">${d.category} · ${d.doc_type}</div></div>
+      <span class="pill ${d.status==='Valid'?'pill-green':d.status==='Expiring'?'pill-red':'pill-yellow'}">${d.status}${d.expiry_date?' '+d.expiry_date:''}</span>
+      <button onclick="deleteDoc(${d.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;margin-left:8px">×</button>
+    </div>`).join('');
+  const expiring = data?.documents?.filter(d=>d.status==='Expiring')||[];
+  const alerts = expiring.map(d=>`<div class="insight-item"><div class="insight-icon">🚨</div><div class="insight-text"><strong>${d.name} Expiring</strong>Expires ${d.expiry_date}. Renew immediately to avoid disruption.</div></div>`);
+  alerts.push('<div class="insight-item"><div class="insight-icon">📋</div><div class="insight-text"><strong>Missing: Will/Estate Document</strong>No estate planning document detected. Recommended given ₹48L+ net worth.</div></div>');
+  document.getElementById('vault-alerts').innerHTML = alerts.join('');
+}
+
+// ── PASSWORDS ──
+async function loadPasswords() {
+  const data = await api('/passwords');
+  document.getElementById('pwd-sub').textContent = `${data?.credentials?.length||0} accounts stored`;
+  document.getElementById('pwd-badge').textContent = (data?.weak_count||0) + ' Weak Passwords';
+  document.getElementById('pwd-kpis').innerHTML = `
+    <div class="kpi-card" style="--accent-color:var(--blue)"><div class="kpi-label">Total Accounts</div><div class="kpi-value">${data?.credentials?.length||0}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--red)"><div class="kpi-label">Weak Passwords</div><div class="kpi-value">${data?.weak_count||0}</div><div class="kpi-sub">Change immediately</div></div>
+    <div class="kpi-card" style="--accent-color:var(--yellow)"><div class="kpi-label">Reused Passwords</div><div class="kpi-value">${data?.reused_count||0}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)"><div class="kpi-label">Security Score</div><div class="kpi-value">${data?.security_score||0}/100</div></div>`;
+  document.getElementById('pwd-list').innerHTML = (data?.credentials||[]).map(p=>`
+    <div class="pwd-item" id="pwd-${p.id}">
+      <div class="pwd-icon">${p.icon}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.site}</div><div style="font-size:11px;color:var(--text3)">${p.username}</div></div>
+      <span class="pill ${p.strength==='Strong'?'pill-green':p.strength==='Medium'?'pill-yellow':'pill-red'}">${p.strength}${p.reused?' · Reused':''}</span>
+      <button onclick="deletePwd(${p.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;margin-left:8px">×</button>
+    </div>`).join('');
+}
+
+// ── SETTINGS ──
+async function loadSettings() {
+  const s = await api('/settings');
+  if(!s) return;
+  const connections = [
+    {key:'gmail_connected',label:'Gmail (prakhar@networkfp.com)',desc:'Email intelligence + bill detection'},
+    {key:'calendar_connected',label:'Google Calendar',desc:'Events + meeting sync'},
+    {key:'zerodha_connected',label:'Zerodha',desc:'Portfolio + holdings sync'},
+    {key:'hdfc_connected',label:'HDFC Bank',desc:'Account statements via PDF'},
+    {key:'outlook_connected',label:'Outlook / Microsoft 365',desc:'Secondary inbox'},
+  ];
+  document.getElementById('settings-connections').innerHTML = connections.map(c=>`
+    <div class="settings-row">
+      <div><div class="settings-label">${c.label}</div><div class="settings-desc">${c.desc}</div></div>
+      <button class="connect-btn ${s[c.key]==='1'?'connected':''}" onclick="toggleConn('${c.key}',this)">${s[c.key]==='1'?'✓ Connected':'+ Connect'}</button>
+    </div>`).join('');
+  const aiToggles = [
+    {key:'ai_spending_alerts',label:'AI Spending Alerts',desc:'Notify on anomalies'},
+    {key:'predictive_insights',label:'Predictive Insights',desc:'Weekly wealth trajectory'},
+    {key:'doc_auto_tag',label:'Document Auto-Tag',desc:'OCR + AI categorization'},
+  ];
+  document.getElementById('settings-ai').innerHTML = `
+    <div class="settings-row"><div><div class="settings-label">Gemini API Key</div><div class="settings-desc">Powers all AI insights</div></div><button class="connect-btn connected">✓ Active</button></div>
+    ${aiToggles.map(t=>`<div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div><div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('')}`;
+  const notifToggles = [{key:'email_alerts',label:'Email Alerts',desc:'Critical alerts to inbox'},{key:'emi_reminders',label:'EMI Reminders',desc:'3 days before due'},{key:'budget_warnings',label:'Budget Warnings',desc:'Alert at 80% spend'},{key:'fraud_alerts',label:'Fraud Alerts',desc:'Instant push'}];
+  document.getElementById('settings-notifs').innerHTML = notifToggles.map(t=>`<div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div><div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('');
+  document.getElementById('settings-data').innerHTML = `
+    <div class="settings-row"><div><div class="settings-label">Auto Data Sync</div><div class="settings-desc">Every 6 hours</div></div><div class="toggle ${s.auto_sync==='1'?'on':''}" onclick="toggleSetting('auto_sync',this)"></div></div>
+    <div class="settings-row"><div><div class="settings-label">End-to-End Encryption</div><div class="settings-desc">AES-256 on all vault data</div></div><div class="toggle on"></div></div>
+    <div class="settings-row"><div><div class="settings-label">Export All Data</div><div class="settings-desc">Download full backup</div></div><button class="connect-btn" onclick="alert('Export feature coming soon')">Export →</button></div>`;
+}
+
+// ── CHARTS ──
+function initCharts(page) {
+  const d = chartDefaults();
+  Chart.defaults.color = d.color;
+
+  if(page==='cfo') {
+    api('/cashflow').then(cf => {
+      if(!cf||charts.cashflow) return;
+      const labels = cf.map(c=>monthLabel(c.month));
+      charts.cashflow = new Chart(document.getElementById('cashflowChart'),{type:'line',data:{labels,datasets:[
+        {label:'Income',data:cf.map(c=>c.income/1000),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.1)',tension:.4,fill:true,pointRadius:3},
+        {label:'Expenses',data:cf.map(c=>c.expenses/1000),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.05)',tension:.4,fill:true,pointRadius:3}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,padding:14}}},scales:{x:{grid:{color:d.gridColor}},y:{grid:{color:d.gridColor},ticks:{callback:v=>'₹'+v+'K'}}}}});
+    });
+    api('/net-worth-history').then(nw => {
+      if(!nw||charts.assets) return;
+      const last = nw[nw.length-1]||{assets:0,liabilities:0};
+      const inv = last.assets * 0.646, re = last.assets * 0.221, cash = last.assets * 0.084, liab = last.liabilities;
+      charts.assets = new Chart(document.getElementById('assetsChart'),{type:'doughnut',data:{labels:['Investments','Real Estate','Cash','Liabilities'],datasets:[{data:[inv,re,cash,liab],backgroundColor:['#10b981','#3b82f6','#f59e0b','#ef4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false}}}});
+      document.getElementById('assets-legend').innerHTML = [['Investments','#10b981',((inv/(inv+re+cash+liab))*100).toFixed(0)],['Real Estate','#3b82f6',((re/(inv+re+cash+liab))*100).toFixed(0)],['Cash','#f59e0b',((cash/(inv+re+cash+liab))*100).toFixed(0)],['Liabilities','#ef4444',((liab/(inv+re+cash+liab))*100).toFixed(0)]].map(([l,c,p])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div><span class="legend-label">${l}</span><span class="legend-pct" style="color:${c}">${p}%</span></div>`).join('');
+    });
+  }
+  if(page==='investments') {
+    api('/net-worth-history').then(nw=>{
+      if(!nw||charts.nwChart) return;
+      const actual = nw.filter((_,i)=>i<nw.length-2);
+      const proj = [{record_date:'2026-07',net_worth:5050000},{record_date:'2026-08',net_worth:5200000},{record_date:'2026-09',net_worth:5360000},{record_date:'2026-10',net_worth:5500000},{record_date:'2026-11',net_worth:5640000},{record_date:'2026-12',net_worth:5780000}];
+      charts.nwChart = new Chart(document.getElementById('nwChart'),{type:'line',data:{labels:[...actual.map(n=>monthLabel(n.record_date)),...proj.map(n=>monthLabel(n.record_date))],datasets:[
+        {label:'Actual',data:[...actual.map(n=>n.net_worth/100000),...Array(proj.length).fill(null)],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',tension:.4,fill:true,pointRadius:3},
+        {label:'Projected',data:[...Array(actual.length).fill(null),...proj.map(n=>n.net_worth/100000)],borderColor:'#10b981',borderDash:[5,5],tension:.4,pointRadius:3}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10}}},scales:{x:{grid:{color:d.gridColor}},y:{grid:{color:d.gridColor},ticks:{callback:v=>'₹'+v+'L'}}}}});
+    });
+  }
+  if(page==='budget') {
+    api('/cashflow').then(cf=>{
+      if(!cf||charts.spend) return;
+      const last6 = cf.slice(-6);
+      charts.spend = new Chart(document.getElementById('spendChart'),{type:'bar',data:{labels:last6.map(c=>monthLabel(c.month)),datasets:[{label:'Spend',data:last6.map(c=>c.expenses),backgroundColor:'rgba(99,102,241,.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:d.gridColor},ticks:{callback:v=>'₹'+(v/1000)+'K'}}}}});
+    });
+  }
+  if(page==='insights') {
+    api('/net-worth-history').then(nw=>{
+      if(!nw||charts.wealth) return;
+      const proj = nw.map(n=>({...n})); for(let i=0;i<6;i++) proj.push({record_date:`proj${i}`,net_worth:5500000+(i*150000)});
+      charts.wealth = new Chart(document.getElementById('wealthChart'),{type:'line',data:{labels:[...nw.map(n=>monthLabel(n.record_date)),...['Jul','Aug','Sep','Oct','Nov','Dec']],datasets:[
+        {label:'Actual',data:[...nw.map(n=>n.net_worth/100000),...Array(6).fill(null)],borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',tension:.4,fill:true,pointRadius:3},
+        {label:'Projected',data:[...Array(nw.length).fill(null),...[55,56.5,58,59.4,60.8,62.2]],borderColor:'#10b981',borderDash:[5,5],tension:.4,pointRadius:3}
+      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10}}},scales:{x:{grid:{color:d.gridColor}},y:{grid:{color:d.gridColor},ticks:{callback:v=>'₹'+v+'L'}}}}});
+    });
+  }
+}
+
+// ── ACTIONS ──
+async function resolveAlert(id, btn) {
+  await api('/alerts/'+id+'/resolve', {method:'PATCH', body:'{}'});
+  btn.closest('.alert-item').style.opacity='.4';
+  btn.textContent='✓ Resolved';
+  btn.disabled=true;
+  loadRisk();
+}
+
+async function addTxn() {
+  const desc=document.getElementById('txn-desc').value.trim();
+  const cat=document.getElementById('txn-cat').value;
+  const amount=parseFloat(document.getElementById('txn-amount').value);
+  const date=document.getElementById('txn-date').value || new Date().toISOString().split('T')[0];
+  const type=document.getElementById('txn-type').value;
+  if(!desc||isNaN(amount)) return alert('Fill description and amount');
+  const icons={'Food & Dining':'🛒','Transport':'🚗','Utilities':'⚡','Shopping':'🛍️','Investments':'📈','Loans':'🏠','Subscriptions':'📱','Health':'🏥','Insurance':'🏦','Income':'💼'};
+  await api('/transactions',{method:'POST',body:JSON.stringify({description:desc,category:cat,amount,date,type,icon:icons[cat]||'💳'})});
+  toggleAddTxn(); loadBanking(); loadCFO();
+}
+
+async function addEvent() {
+  const title=document.getElementById('evt-title').value.trim();
+  const time=document.getElementById('evt-time').value;
+  const type=document.getElementById('evt-type').value;
+  const desc=document.getElementById('evt-desc').value.trim();
+  if(!title) return alert('Enter event title');
+  await api('/events',{method:'POST',body:JSON.stringify({title,event_date:'2026-06-01',event_time:time,type,description:desc})});
+  toggleAddEvent(); loadEA();
+}
+
+async function addDoc() {
+  const name=document.getElementById('doc-name').value.trim();
+  const category=document.getElementById('doc-cat').value;
+  const expiry=document.getElementById('doc-expiry').value;
+  if(!name) return alert('Enter document name');
+  const icons={'Identity':'🪪','Finance':'📄','Legal':'⚖️','Insurance':'🏥'};
+  await api('/vault',{method:'POST',body:JSON.stringify({name,category,icon:icons[category]||'📄',expiry_date:expiry||null})});
+  toggleAddDoc(); loadVault();
+}
+
+async function deleteDoc(id) {
+  if(!confirm('Delete document?')) return;
+  await api('/vault/'+id,{method:'DELETE'});
+  document.getElementById('doc-'+id)?.remove();
+}
+
+async function addPwd() {
+  const site=document.getElementById('p-site').value.trim();
+  const username=document.getElementById('p-user').value.trim();
+  const strength=document.getElementById('p-strength').value;
+  if(!site||!username) return alert('Fill site and username');
+  const icons={'HDFC':'🏦','Gmail':'📧','Amazon':'🛒','Bank':'🏦','default':'🔐'};
+  await api('/passwords',{method:'POST',body:JSON.stringify({site,username,icon:'🔐',strength})});
+  toggleAddPwd(); loadPasswords();
+}
+
+async function deletePwd(id) {
+  if(!confirm('Delete credential?')) return;
+  await api('/passwords/'+id,{method:'DELETE'});
+  document.getElementById('pwd-'+id)?.remove();
+}
+
+async function toggleSetting(key, el) {
+  el.classList.toggle('on');
+  const val = el.classList.contains('on') ? '1' : '0';
+  await api('/settings/'+key,{method:'PATCH',body:JSON.stringify({value:val})});
+}
+
+async function toggleConn(key, btn) {
+  const isConn = btn.classList.contains('connected');
+  btn.classList.toggle('connected');
+  btn.textContent = isConn ? '+ Connect' : '✓ Connected';
+  await api('/settings/'+key,{method:'PATCH',body:JSON.stringify({value:isConn?'0':'1'})});
+}
+
+function exportTxns() {
+  api('/transactions?limit=1000').then(data=>{
+    const rows=[['Date','Description','Category','Amount','Type'],...(data?.transactions||[]).map(t=>[t.date,t.description,t.category,t.amount,t.type])];
+    const csv=rows.map(r=>r.join(',')).join('\n');
+    const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+    a.download='transactions.csv'; a.click();
+  });
+}
+
+// ── FORM TOGGLES ──
+const toggleForm = id => document.getElementById(id).classList.toggle('open');
+function toggleAddTxn(){toggleForm('txn-form');}
+function toggleAddEvent(){toggleForm('event-form');}
+function toggleAddDoc(){toggleForm('doc-form');}
+function toggleAddBudget(){}
+function toggleAddPwd(){toggleForm('pwd-form');}
+
+// ── AI CHAT ──
+function toggleAI() {
+  const p=document.getElementById('ai-panel');
+  const fab=document.querySelector('.ai-fab');
+  p.classList.toggle('open');
+  fab.style.display=p.classList.contains('open')?'none':'flex';
+  if(p.classList.contains('open')) document.getElementById('ai-input-box').focus();
+}
+
+async function sendAIMsg() {
+  const input=document.getElementById('ai-input-box');
+  const msg=input.value.trim(); if(!msg) return;
+  const msgs=document.getElementById('ai-messages');
+  msgs.innerHTML+=`<div class="ai-msg user">${msg}</div>`;
+  msgs.innerHTML+=`<div class="ai-msg bot" id="ai-typing"><div class="spinner"></div></div>`;
+  input.value=''; msgs.scrollTop=msgs.scrollHeight;
+  const data=await api('/ai/chat',{method:'POST',body:JSON.stringify({message:msg})});
+  document.getElementById('ai-typing')?.remove();
+  msgs.innerHTML+=`<div class="ai-msg bot">${data?.reply||'Sorry, could not process that.'}</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── SEARCH ──
+function openSearch(){document.getElementById('search-modal').classList.add('open');setTimeout(()=>document.getElementById('search-input').focus(),50);}
+function closeSearch(){document.getElementById('search-modal').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSearch();if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openSearch();}});
+
+let searchTimer;
+function handleSearch(q) {
+  clearTimeout(searchTimer);
+  if(q.length<2) return;
+  searchTimer=setTimeout(async()=>{
+    const data=await api('/search?q='+encodeURIComponent(q));
+    if(!data) return;
+    const results=[...data.transactions,...data.documents,...data.emails];
+    const icons={transaction:'💳',document:'📄',email:'📧'};
+    document.getElementById('search-results').innerHTML=results.length?`
+      <div class="search-section">Results for "${q}"</div>
+      ${results.map(r=>`<div class="search-result"><div class="search-result-icon">${icons[r.type]}</div><div><div class="search-result-title">${r.title}</div><div class="search-result-sub">${r.subtitle||''} · ${r.type}</div></div></div>`).join('')}`
+    :'<div style="padding:16px 20px;color:var(--text3)">No results found</div>';
+  },300);
+}
+
+// ── NOTIFICATIONS ──
+async function toggleNotif(){
+  document.getElementById('notif-panel').classList.toggle('open');
+  if(document.getElementById('notif-panel').classList.contains('open')) loadNotifs();
+}
+async function loadNotifs(){
+  const data=await api('/notifications');
+  document.getElementById('notif-dot').style.display=data?.unread_count?'block':'none';
+  document.getElementById('notif-list').innerHTML=(data?.alerts||[]).map(a=>`
+    <div class="notif-item"><div class="notif-title">${a.severity==='critical'?'🚨':'⚠️'} ${a.title}</div><div class="notif-sub">${a.description.slice(0,80)}… · ${a.created_at}</div></div>`).join('')
+    +((data?.upcoming_events||[]).map(e=>`<div class="notif-item"><div class="notif-title">📅 ${e.title}</div><div class="notif-sub">${e.event_date} ${e.event_time}</div></div>`).join(''));
+}
+document.addEventListener('click',e=>{if(!e.target.closest('#notif-panel')&&!e.target.closest('#notif-btn'))document.getElementById('notif-panel').classList.remove('open');});
+
+// ── SETTINGS ACCOUNT ──
+async function loadSettingsAccount() {
+  const user = currentUser;
+  if (!user) return;
+  document.getElementById('settings-account').innerHTML = `
+    <div class="settings-row"><div><div class="settings-label">${user.name}</div><div class="settings-desc">${user.email}</div></div><span class="pill pill-purple">${user.avatar}</span></div>
+    <div class="settings-row"><div><div class="settings-label">Change Password</div><div class="settings-desc">Update your login password</div></div><button class="connect-btn" onclick="showChangePwd()">Change →</button></div>
+    <div class="settings-row"><div><div class="settings-label">Sign Out</div><div class="settings-desc">Log out of PLOS</div></div><button class="connect-btn" style="color:var(--red);border-color:var(--red)" onclick="logout()">Sign Out</button></div>`;
+}
+
+function showChangePwd() {
+  const np = prompt('New password (min 6 chars):');
+  if (!np || np.length < 6) return;
+  const cp = prompt('Current password:');
+  api('/auth/change-password', { method:'POST', body:JSON.stringify({current:cp, newPassword:np}) })
+    .then(d => showToast(d ? '✅ Password updated' : '❌ Current password incorrect'));
+}
+
+// ── SETTINGS LOADER (updated) ──
+const _origLoadSettings = loadSettings;
+loadSettings = async function() {
+  const s = await api('/settings');
+  if (!s) return;
+
+  // Gemini status
+  const geminiEl = document.getElementById('gemini-status');
+  if (geminiEl) {
+    geminiEl.textContent = s.gemini_api_active === '1' ? '✅ Active' : '⚠️ Not configured';
+    geminiEl.style.color = s.gemini_api_active === '1' ? 'var(--green)' : 'var(--text3)';
+  }
+
+  // Gmail status
+  const gmailStatusEl = document.getElementById('gmail-status');
+  if (gmailStatusEl) {
+    gmailStatusEl.textContent = s.gmail_connected === '1' ? '✅ Connected' : 'Not connected';
+    gmailStatusEl.style.color = s.gmail_connected === '1' ? 'var(--green)' : 'var(--text3)';
+  }
+  if (s.gmail_connected === '1') {
+    const btn = document.getElementById('gmail-connect-btn');
+    if (btn) { btn.textContent = '🔄 Sync Now'; btn.onclick = syncGmail; }
+  }
+
+  const connections = [
+    {key:'gmail_connected',label:'Gmail',desc:'Email intelligence + bill detection'},
+    {key:'calendar_connected',label:'Google Calendar',desc:'Events + meeting sync'},
+    {key:'zerodha_connected',label:'Zerodha',desc:'Portfolio sync'},
+    {key:'hdfc_connected',label:'HDFC Bank',desc:'Statements'},
+    {key:'outlook_connected',label:'Outlook',desc:'Secondary inbox'},
+  ];
+  document.getElementById('settings-connections').innerHTML = connections.map(c=>`
+    <div class="settings-row">
+      <div><div class="settings-label">${c.label}</div><div class="settings-desc">${c.desc}</div></div>
+      <button class="connect-btn ${s[c.key]==='1'?'connected':''}" onclick="toggleConn('${c.key}',this)">${s[c.key]==='1'?'✓ Connected':'+ Connect'}</button>
+    </div>`).join('');
+
+  const aiToggles = [
+    {key:'ai_spending_alerts',label:'AI Spending Alerts',desc:'Notify on anomalies'},
+    {key:'predictive_insights',label:'Predictive Insights',desc:'Weekly trajectory'},
+    {key:'doc_auto_tag',label:'Document Auto-Tag',desc:'OCR + AI categorization'},
+  ];
+  document.getElementById('settings-ai').innerHTML = aiToggles.map(t=>`
+    <div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div>
+    <div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('');
+
+  const notifToggles = [
+    {key:'email_alerts',label:'Email Alerts',desc:'Critical alerts to inbox'},
+    {key:'emi_reminders',label:'EMI Reminders',desc:'3 days before due'},
+    {key:'budget_warnings',label:'Budget Warnings',desc:'Alert at 80% spend'},
+    {key:'fraud_alerts',label:'Fraud Alerts',desc:'Instant push'},
+  ];
+  document.getElementById('settings-notifs').innerHTML = notifToggles.map(t=>`
+    <div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div>
+    <div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('');
+
+  loadSettingsAccount();
+};
+
+// ── INIT ──
+async function initApp() {
+  document.getElementById('txn-date').value = new Date().toISOString().split('T')[0];
+  // Check for Gmail OAuth callback
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('gmail') === 'connected') {
+    showToast('✅ Gmail connected successfully!');
+    history.replaceState({}, '', window.location.pathname);
+  }
+  await loadCFO();
+  initCharts('cfo');
+  loadNotifs();
+}
+
+(async () => {
+  // Auto-login if token exists
+  const saved = localStorage.getItem('plos_user');
+  const token = getToken();
+  if (token && saved) {
+    currentUser = JSON.parse(saved);
+    document.getElementById('login-screen').classList.add('hidden');
+    document.querySelector('.avatar').textContent = currentUser.avatar || 'PK';
+    await initApp();
+  }
+  // Apply saved theme
+  const theme = localStorage.getItem('plos-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-btn').textContent = theme === 'dark' ? '🌙' : '☀️';
+})();
+</script>
+</body>
 </html>
-
-

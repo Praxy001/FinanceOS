@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Personal Life Operating System — Backend API",
   "main": "server.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "npx nodemon server.js"

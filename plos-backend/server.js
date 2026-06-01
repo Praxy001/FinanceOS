@@ -28,6 +28,10 @@ app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..')));
 
+// Health check — Railway pings this to confirm server is running
+app.get('/health', (_, res) => res.json({ status: 'ok', version: '2.0', time: new Date().toISOString() }));
+app.get('/', (_, res) => res.json({ app: 'PLOS API', status: 'running' }));
+
 // ─────────────────────────────────────────────
 // DATABASE
 // ─────────────────────────────────────────────
