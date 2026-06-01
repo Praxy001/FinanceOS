@@ -4,6 +4,8 @@
  * Layers: Auth · Gemini AI · Gmail OAuth · Cron Scheduler
  */
 
+require('dotenv').config();
+
 const express    = require('express');
 const { DatabaseSync } = require('node:sqlite');
 const cors       = require('cors');
@@ -323,6 +325,20 @@ function seedDB() {
 
 initDB();
 seedDB();
+
+// Auto-populate Gemini API key from .env if available
+if (process.env.GEMINI_API_KEY) {
+  db.prepare(`INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)`).run('gemini_api_key', process.env.GEMINI_API_KEY);
+  db.prepare(`INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)`).run('gemini_api_active', '1');
+  console.log('✅ Gemini API key loaded from .env');
+}
+
+// Auto-populate Google OAuth credentials from .env if available
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  db.prepare(`INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)`).run('google_client_id', process.env.GOOGLE_CLIENT_ID);
+  db.prepare(`INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)`).run('google_client_secret', process.env.GOOGLE_CLIENT_SECRET);
+  console.log('✅ Google OAuth credentials loaded from .env');
+}
 
 // ─────────────────────────────────────────────
 // HELPERS

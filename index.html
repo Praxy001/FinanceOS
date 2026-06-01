@@ -272,10 +272,59 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 
 /* SPINNER */
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+
+<!-- INITIAL LOADING FALLBACK -->
+<noscript>
+  <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0a0b0f;color:#f1f5f9;font-family:system-ui">
+    <div style="text-align:center">
+      <h1 style="font-size:28px;margin-bottom:16px">⚠️ JavaScript Required</h1>
+      <p>Please enable JavaScript to use PLOS. Your browser has JavaScript disabled.</p>
+    </div>
+  </div>
+</noscript>
+
+<style>
+  body.loading {
+    background: #0a0b0f !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .initial-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .loader-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .loader-text {
+    color: #f1f5f9;
+    font-size: 14px;
+    font-family: system-ui;
+  }
+</style>
+
+<div id="app-loader" class="initial-loader" style="position:fixed;inset:0;background:#0a0b0f;z-index:99999;display:flex">
+  <div class="loader-icon">P</div>
+  <div class="loader-text">PLOS — Loading…</div>
+</div>
 
 <!-- LOGIN SCREEN -->
 <div id="login-screen">
@@ -860,11 +909,15 @@ async function doAuth() {
     currentUser = j.data.user;
     localStorage.setItem('plos_user', JSON.stringify(currentUser));
     document.getElementById('login-screen').classList.add('hidden');
+    const loader = document.getElementById('app-loader');
+    if (loader) loader.style.display = 'none';
     document.querySelector('.avatar').textContent = currentUser.avatar || 'PK';
     await initApp();
   } catch(e) {
     errEl.textContent = 'Connection failed — is the server running?';
     errEl.classList.add('show');
+    const loader = document.getElementById('app-loader');
+    if (loader) loader.style.display = 'none';
   }
 }
 
@@ -1315,8 +1368,9 @@ async function loadSettings() {
     {key:'predictive_insights',label:'Predictive Insights',desc:'Weekly wealth trajectory'},
     {key:'doc_auto_tag',label:'Document Auto-Tag',desc:'OCR + AI categorization'},
   ];
+  const geminiActive = s.gemini_api_key && s.gemini_api_key.length > 0;
   document.getElementById('settings-ai').innerHTML = `
-    <div class="settings-row"><div><div class="settings-label">Gemini API Key</div><div class="settings-desc">Powers all AI insights</div></div><button class="connect-btn connected">✓ Active</button></div>
+    <div class="settings-row"><div><div class="settings-label">Gemini API Key</div><div class="settings-desc">Powers all AI insights</div></div><button class="connect-btn ${geminiActive?'connected':''}">${geminiActive?'✓ Active':'⚠️ Not set'}</button></div>
     ${aiToggles.map(t=>`<div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div><div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('')}`;
   const notifToggles = [{key:'email_alerts',label:'Email Alerts',desc:'Critical alerts to inbox'},{key:'emi_reminders',label:'EMI Reminders',desc:'3 days before due'},{key:'budget_warnings',label:'Budget Warnings',desc:'Alert at 80% spend'},{key:'fraud_alerts',label:'Fraud Alerts',desc:'Instant push'}];
   document.getElementById('settings-notifs').innerHTML = notifToggles.map(t=>`<div class="settings-row"><div><div class="settings-label">${t.label}</div><div class="settings-desc">${t.desc}</div></div><div class="toggle ${s[t.key]==='1'?'on':''}" onclick="toggleSetting('${t.key}',this)"></div></div>`).join('');
@@ -1607,6 +1661,10 @@ loadSettings = async function() {
 
 // ── INIT ──
 async function initApp() {
+  // Hide initial loader
+  const loader = document.getElementById('app-loader');
+  if (loader) loader.style.display = 'none';
+  
   document.getElementById('txn-date').value = new Date().toISOString().split('T')[0];
   // Check for Gmail OAuth callback
   const urlParams = new URLSearchParams(window.location.search);
@@ -1628,6 +1686,10 @@ async function initApp() {
     document.getElementById('login-screen').classList.add('hidden');
     document.querySelector('.avatar').textContent = currentUser.avatar || 'PK';
     await initApp();
+  } else {
+    // Hide loader and show login screen
+    const loader = document.getElementById('app-loader');
+    if (loader) loader.style.display = 'none';
   }
   // Apply saved theme
   const theme = localStorage.getItem('plos-theme') || 'dark';

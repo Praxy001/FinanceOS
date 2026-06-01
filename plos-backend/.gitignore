@@ -1,4 +1,6 @@
 node_modules/
 plos.db
-
+.env
+.env.local
+.DS_Store
 
