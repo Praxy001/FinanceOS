@@ -667,7 +667,7 @@ app.post('/api/gmail/sync', authMiddleware, async (req, res) => {
 // ─────────────────────────────────────────────
 
 app.get('/api/summary', authMiddleware, (req, res) => {
-  const gmail_synced = db.prepare('SELECT COUNT(*) as c FROM emails WHERE gmail_id IS NOT NULL').get().c > 0;
+  const gmail_synced = db.prepare('SELECT COUNT(*) as c FROM emails').get().c > 0;
   const accounts = db.prepare('SELECT SUM(balance) as t FROM accounts').get();
   const inv      = db.prepare('SELECT SUM(current_value) as c FROM investments').get();
   const loans    = db.prepare('SELECT SUM(outstanding) as t FROM loans').get();
